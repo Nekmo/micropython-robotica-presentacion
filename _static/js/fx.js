@@ -12,6 +12,7 @@
  *   pixels      LCD pixel grid lit by the pointer, fading like a trail
  *   neural      small neural network with signals; nodes near the pointer fire
  *   circuit     PCB traces with travelling electrons, lit near the pointer
+ *   chip        a microcontroller on a PCB: traces, passives, signals into the chip
  *
  *   lcd         face slides: glows behind the robot's screen, twinkling pixels
  *   boot        opening slide: like lcd, plus pixels rising from the floor
@@ -252,7 +253,7 @@
                     s.last = now;
                 }
                 ctx.lineWidth = 1;
-                ctx.strokeStyle = `rgba(${c.line}, ${c.soft * 0.6})`;
+                ctx.strokeStyle = `rgba(${c.line}, ${c.soft * 0.8})`;
                 s.edges.forEach(([a, b]) => {
                     ctx.beginPath();
                     ctx.moveTo(a.x, a.y);
@@ -291,9 +292,12 @@
                 const text = slide.dataset.scene === "sheet";
                 const leftReach = text ? 0.07 : 0.17, rightReach = text ? 0.1 : 0.18;
                 const traces = [];
+                // the same lanes on both sides (balanced), each side with its
+                // own lengths and jogs so it does not look mirrored
+                const lanes = [];
+                for (let y = top; y < bottom; y += lane) if (rand() >= 0.3) lanes.push(y);
                 [-1, 1].forEach((side) => {
-                    for (let y = top; y < bottom; y += lane) {
-                        if (rand() < 0.3) continue;
+                    for (const y of lanes) {
                         const inward = -side;
                         const edge = side < 0 ? -10 : w + 10;
                         const reach = w * (side < 0 ? leftReach : rightReach) * (0.45 + rand() * 0.55);
@@ -341,6 +345,227 @@
                         }
                         d -= trace.lengths[i];
                     }
+                });
+            },
+        },
+
+        chip: {
+            // A QFP microcontroller soldered on a PCB, half off the right edge
+            // (the board continues beyond the screen, the text column stays
+            // clear): copper traces fan out from its pins to vias, a couple
+            // of passives sit next to it and signals travel into the chip,
+            // which glows with activity.
+            init(w, h) {
+                const s = Math.min(w, h) * 0.46;              // package size
+                const cx = w * 1.02, cy = h * 0.62;
+                const n = 12, pitch = s / (n + 1), lead = s * 0.07;
+                const traces = [];
+                let seed = 3;
+                const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+                // four sides: outward normal (nx, ny) and the along-side axis (ax, ay)
+                [[1, 0, 0, 1], [-1, 0, 0, 1], [0, -1, 1, 0], [0, 1, 1, 0]].forEach(([nx, ny, ax, ay]) => {
+                    for (let i = 0; i < n; i++) {
+                        const k = (i + 1) * pitch - s / 2;           // offset along the side
+                        const x0 = cx + nx * (s / 2 + lead) + ax * k;
+                        const y0 = cy + ny * (s / 2 + lead) + ay * k;
+                        const fan = k / (s / 2);                    // -1..1, spreads outwards
+                        const out1 = 30 + rand() * 30;
+                        const spread = fan * (40 + rand() * 30);
+                        // left traces stop early: the text column lives there
+                        const reach = nx < 0 ? 20 + rand() * 50 : 140 + rand() * 260;
+                        const p1 = [x0 + nx * out1, y0 + ny * out1];
+                        const p2 = [p1[0] + nx * Math.abs(spread) + ax * spread, p1[1] + ny * Math.abs(spread) + ay * spread];
+                        const p3 = [p2[0] + nx * reach, p2[1] + ny * reach];
+                        traces.push({pts: [[x0, y0], p1, p2, p3], via: rand() < 0.75});
+                    }
+                });
+                traces.forEach((trace) => {
+                    trace.lengths = trace.pts.slice(1).map(([x, y], i) => Math.hypot(x - trace.pts[i][0], y - trace.pts[i][1]));
+                    trace.total = trace.lengths.reduce((a, b) => a + b, 0);
+                });
+                // decoupling caps above the package, clear of title and title block
+                const parts = [
+                    {x: cx - s * 0.18, y: cy - s * 0.78, w: 26, h: 14},
+                    {x: cx - s * 0.02, y: cy - s * 0.9, w: 14, h: 26},
+                ];
+                return {s, cx, cy, n, pitch, lead, traces, parts, pulses: [], heat: 0, last: 0};
+            },
+            draw(ctx, w, h, t, st, c) {
+                const {s, cx, cy, n, pitch, lead} = st;
+                const now = performance.now();
+                // copper traces and vias
+                ctx.lineWidth = 3;
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+                st.traces.forEach((trace) => {
+                    const near = trace.pts.some(([x, y]) => Math.hypot(pointer.x - x, pointer.y - y) < 60);
+                    ctx.strokeStyle = near ? `rgba(${c.accent}, 0.6)` : `rgba(${c.line}, ${c.soft * 1.15})`;
+                    ctx.beginPath();
+                    trace.pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+                    ctx.stroke();
+                    if (trace.via) {
+                        const [vx, vy] = trace.pts[3];
+                        ctx.beginPath();
+                        ctx.arc(vx, vy, 6, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                });
+                // a signal every few frames, travelling from a via into a pin
+                if (now - st.last > 120) {
+                    st.pulses.push({trace: st.traces[Math.floor(Math.random() * st.traces.length)], born: now});
+                    st.last = now;
+                }
+                st.pulses = st.pulses.filter((p) => {
+                    const k = (now - p.born) / 900;
+                    if (k >= 1) { st.heat = Math.min(1, st.heat + 0.12); return false; }
+                    let d = (1 - k) * p.trace.total;
+                    for (let i = 0; i < p.trace.lengths.length; i++) {
+                        if (d <= p.trace.lengths[i]) {
+                            const [ax, ay] = p.trace.pts[i], [bx, by] = p.trace.pts[i + 1];
+                            const f = d / p.trace.lengths[i];
+                            ctx.fillStyle = `rgba(${c.accent}, 0.95)`;
+                            ctx.beginPath();
+                            ctx.arc(ax + (bx - ax) * f, ay + (by - ay) * f, 3.5, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                        }
+                        d -= p.trace.lengths[i];
+                    }
+                    return true;
+                });
+                st.heat *= 0.96;
+                // ceramic capacitors with tinned ends
+                st.parts.forEach((part) => {
+                    ctx.fillStyle = "#b9935f";
+                    ctx.strokeStyle = "rgba(31, 42, 68, 0.35)";
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.roundRect(part.x - part.w / 2, part.y - part.h / 2, part.w, part.h, 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillStyle = "#d9dde2";
+                    const e = 6;
+                    if (part.h > part.w) {
+                        ctx.fillRect(part.x - part.w / 2, part.y - part.h / 2, part.w, e);
+                        ctx.fillRect(part.x - part.w / 2, part.y + part.h / 2 - e, part.w, e);
+                    } else {
+                        ctx.fillRect(part.x - part.w / 2, part.y - part.h / 2, e, part.h);
+                        ctx.fillRect(part.x + part.w / 2 - e, part.y - part.h / 2, e, part.h);
+                    }
+                });
+                // gull-wing leads on the four sides
+                ctx.fillStyle = "#b8bdc6";
+                for (let i = 0; i < n; i++) {
+                    const k = (i + 1) * pitch - s / 2;
+                    const pw = pitch * 0.45;
+                    ctx.fillRect(cx + s / 2, cy + k - pw / 2, lead, pw);
+                    ctx.fillRect(cx - s / 2 - lead, cy + k - pw / 2, lead, pw);
+                    ctx.fillRect(cx + k - pw / 2, cy - s / 2 - lead, pw, lead);
+                    ctx.fillRect(cx + k - pw / 2, cy + s / 2, pw, lead);
+                }
+                // package body: black epoxy with a soft highlight
+                const body = ctx.createLinearGradient(cx - s / 2, cy - s / 2, cx + s / 2, cy + s / 2);
+                body.addColorStop(0, "#2b2e35");
+                body.addColorStop(1, "#15171b");
+                ctx.fillStyle = body;
+                ctx.beginPath();
+                ctx.roundRect(cx - s / 2, cy - s / 2, s, s, 6);
+                ctx.fill();
+                // activity glow from the die
+                const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, s * 0.5);
+                glow.addColorStop(0, `rgba(${c.accent}, ${0.08 + st.heat * 0.35})`);
+                glow.addColorStop(1, `rgba(${c.accent}, 0)`);
+                ctx.fillStyle = glow;
+                ctx.fillRect(cx - s / 2, cy - s / 2, s, s);
+                // pin 1 dot and laser marking on the visible half
+                ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+                ctx.beginPath();
+                ctx.arc(cx - s / 2 + 16, cy - s / 2 + 16, 6, 0, Math.PI * 2);
+                ctx.fill();
+                const tx = cx - s * 0.42;
+                ctx.fillStyle = "rgba(233, 238, 242, 0.75)";
+                ctx.font = `700 ${Math.round(s * 0.11)}px 'JetBrains Mono', monospace`;
+                ctx.fillText("ESP32-S3", tx, cy - s * 0.04);
+                ctx.fillStyle = "rgba(233, 238, 242, 0.45)";
+                ctx.font = `500 ${Math.round(s * 0.055)}px 'JetBrains Mono', monospace`;
+                ctx.fillText("Xtensa LX7", tx, cy + s * 0.08);
+                ctx.fillText("2526  N8R8", tx, cy + s * 0.16);
+            },
+        },
+
+        // Neon section slides: a manga sunburst behind Stack-chan. The rays
+        // unfold as the robot lands (stackchan3d.js "peek"), then turn slowly
+        // among twinkling sparkles; a click throws a burst of sparkles.
+        stage: {
+            init: (w, h, slide) => ({
+                born: performance.now(),
+                // centre behind the robot when there is one, else the corner
+                cx: slide.querySelector('.stackchan-3d[data-mode="peek"]') ? 0.82 : 0.9,
+                cy: 0.62,
+                sparkles: Array.from({length: 26}, () => ({
+                    x: Math.random(), y: Math.random(), size: 6 + Math.random() * 14,
+                    phase: Math.random() * Math.PI * 2, speed: 0.6 + Math.random() * 1.4,
+                })),
+                bursts: [],
+            }),
+            click(s, x, y) {
+                for (let i = 0; i < 22; i++) {
+                    const a = Math.random() * Math.PI * 2, v = 7 + Math.random() * 9;
+                    s.bursts.push({x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2,
+                        size: 8 + Math.random() * 14, life: 1});
+                }
+            },
+            draw(ctx, w, h, t, s) {
+                const age = (performance.now() - s.born) / 1000;
+                const cx = s.cx * w, cy = s.cy * h;
+                const reach = Math.hypot(w, h);
+                // rays unfold just as the robot lands (~0.85 s), with overshoot
+                const p = Math.min(1, Math.max(0, (age - 0.7) / 0.9));
+                const open = p === 0 ? 0 : 1 + 2.4 * Math.pow(p - 1, 3) + 1.4 * Math.pow(p - 1, 2);
+                const rays = 18, turn = age * 0.05;
+                const sweep = Math.PI / rays * Math.max(0, open);
+                ctx.fillStyle = "rgba(255, 255, 255, 0.11)";
+                for (let i = 0; i < rays; i++) {
+                    const a = turn + i * Math.PI * 2 / rays;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.arc(cx, cy, reach, a - sweep / 2, a + sweep / 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                // warm halo that breathes behind the robot
+                const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, h * (0.55 + 0.04 * Math.sin(age * 1.6)));
+                halo.addColorStop(0, `rgba(255, 236, 246, ${0.55 * Math.min(1, open)})`);
+                halo.addColorStop(1, "rgba(255, 236, 246, 0)");
+                ctx.fillStyle = halo;
+                ctx.fillRect(0, 0, w, h);
+                // darker vignette on the edges gives depth to the flat pink
+                const vignette = ctx.createRadialGradient(w * 0.4, h * 0.45, h * 0.3, w * 0.5, h * 0.5, reach * 0.62);
+                vignette.addColorStop(0, "rgba(120, 10, 70, 0)");
+                vignette.addColorStop(1, "rgba(120, 10, 70, 0.32)");
+                ctx.fillStyle = vignette;
+                ctx.fillRect(0, 0, w, h);
+
+                const star = (x, y, r, alpha) => {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y - r);
+                    ctx.quadraticCurveTo(x, y, x + r * 0.8, y);
+                    ctx.quadraticCurveTo(x, y, x, y + r);
+                    ctx.quadraticCurveTo(x, y, x - r * 0.8, y);
+                    ctx.quadraticCurveTo(x, y, x, y - r);
+                    ctx.fill();
+                };
+                const fadeIn = Math.min(1, Math.max(0, age - 1.2));
+                s.sparkles.forEach((sp) => {
+                    const twinkle = Math.max(0, Math.sin(age * sp.speed * 2 + sp.phase));
+                    const y = ((sp.y - age * 0.006 * sp.speed) % 1 + 1) % 1;
+                    star(sp.x * w, y * h, sp.size * (0.4 + 0.6 * twinkle), 0.7 * twinkle * fadeIn);
+                });
+                s.bursts = s.bursts.filter((b) => {
+                    b.x += b.vx; b.y += b.vy; b.vy += 0.18; b.life -= 0.022;
+                    if (b.life > 0) star(b.x, b.y, b.size * b.life, b.life);
+                    return b.life > 0;
                 });
             },
         },
@@ -407,7 +632,7 @@
         },
     };
 
-    const SCENE_DEFAULTS = {face: "lcd", boot: "boot"};
+    const SCENE_DEFAULTS = {face: "lcd", boot: "boot", neon: "stage"};
 
     // ---------------------------------------------------------------- lifecycle
 

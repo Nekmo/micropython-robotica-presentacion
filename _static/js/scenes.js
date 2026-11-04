@@ -29,14 +29,6 @@
         ["tl", "tr", "bl", "br"].forEach((corner) => el("i", "reg-mark " + corner, background));
     }
 
-    // The 12 LEDs of the robot running around a neon slide
-    function addLedStrips(background) {
-        ["top", "bottom"].forEach((side) => {
-            const strip = el("div", "led-strip " + side, background);
-            for (let i = 0; i < 6; i++) el("i", "led", strip).style.setProperty("--i", i);
-        });
-    }
-
     function decorate() {
         const slides = Reveal.getSlides();
         slides.forEach((slide, index) => {
@@ -48,7 +40,6 @@
             background.classList.add("scene", "scene-" + scene);
             slide.classList.add("on-" + scene);
             if (scene === "sheet" || scene === "blueprint") addTitleBlock(background, slide, index + 1);
-            if (scene === "neon") addLedStrips(background);
             // Giant outlined challenge number behind the face ("01".."05")
             if (slide.dataset.big) el("div", "big-number", background, slide.dataset.big);
         });

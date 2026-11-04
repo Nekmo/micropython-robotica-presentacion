@@ -67,6 +67,7 @@ revealjs_js_files = [
     'js/fx.js',
     'js/intro.js',
     'js/widgets.js',
+    'js/fragment-images.js',
     'js/camera.js',
     'js/robot-link.js',
     'js/demo.js',

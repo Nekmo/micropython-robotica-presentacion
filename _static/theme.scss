@@ -180,31 +180,53 @@
     background-size: 6px 6px !important;
 }
 
-// Neon: the LEDs light up one after another (the deck's one orchestrated motion)
+// Neon section slides: Stack-chan jumps in (``stackchan-3d :mode: peek``)
 .scene-neon {
     background-color: $neon !important;
-    .led-strip {
+}
+
+.reveal .slides section .stackchan-3d[data-mode="peek"] { display: none; }   // until moved to the background
+.reveal .backgrounds .stackchan-3d[data-mode="peek"] {
+    position: absolute;
+    right: -4vw;
+    bottom: -6vh;
+    width: 40vw;
+    height: 92vh !important;
+    pointer-events: none;
+    canvas { cursor: default; }
+    // landing shockwave around its base
+    .sc3d-ring {
         position: absolute;
         left: 50%;
-        display: flex;
-        gap: 34px;
-        transform: translateX(-50%);
-        &.top { top: 34px; }
-        &.bottom { bottom: 34px; }
-    }
-    .led {
-        width: 18px;
-        height: 18px;
+        bottom: 9%;
+        width: 30vw;
+        height: 7vw;
+        margin-left: -15vw;
+        border: 3px solid rgba(255, 255, 255, 0.9);
         border-radius: 50%;
-        background: rgba($ink, 0.25);
-        animation: led-run 2.4s steps(1) infinite;
-        animation-delay: calc(var(--i) * 0.4s);
+        opacity: 0;
+        transform: scale(0.2);
+    }
+    &.landed .sc3d-ring {
+        animation: peek-ring 1.1s cubic-bezier(.2, .7, .3, 1) both;
+        animation-delay: calc(var(--i) * 0.12s);
+    }
+    // soft spotlight on the floor
+    &::before {
+        content: "";
+        position: absolute;
+        left: 15%;
+        right: 15%;
+        bottom: 4%;
+        height: 14%;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba($ink, 0.28), transparent);
     }
 }
 
-@keyframes led-run {
-    0% { background: $shell; box-shadow: 0 0 16px 4px rgba(255, 255, 255, 0.8); }
-    17%, 100% { background: rgba($ink, 0.25); box-shadow: none; }
+@keyframes peek-ring {
+    0% { opacity: 0.9; transform: scale(0.2); }
+    100% { opacity: 0; transform: scale(2.2); }
 }
 
 // Title block in the bottom-right corner of every drawing
@@ -344,7 +366,7 @@
     &[data-emotion="doubt"] {
         --mouth-rot: -7deg;
         --mouth-sx: 0.6;
-        .sc-eye.left { transform: translate(calc(var(--look-x) * 30 * var(--u)), calc(var(--look-y) * 16 * var(--u) + 8 * var(--u))) scale(1, 0.55); }
+        .sc-eye.left { transform: translate(calc(var(--look-x) * 30 * var(--u)), calc(var(--look-y) * 16 * var(--u) + 8 * var(--u))); }
         .sc-eye.right { transform: translate(calc(var(--look-x) * 30 * var(--u)), calc(var(--look-y) * 16 * var(--u) - 8 * var(--u))) scale(1.08); }
         &::after {
             content: "?";
@@ -904,8 +926,10 @@
 .reveal .slides section.on-sheet :is(li, p) strong { color: darken($neon, 14%); }
 .reveal .slides section.on-blueprint :is(li, p) strong { color: lighten($neon, 6%); }
 .reveal .slides section.on-neon :is(li, p) strong { color: $ink; }
+// Timeline: event names in pink, highlighted words only bold (text colour)
+.reveal .slides section.on-sheet .timeline li strong { color: inherit; }
 .reveal .slides section.on-sheet .timeline li > strong:first-child,
-.reveal .slides section.on-sheet .timeline li > p > strong:first-child { color: $ink; }
+.reveal .slides section.on-sheet .timeline li > p > strong:first-child { color: darken($neon, 8%); }
 .reveal .timeline li { font-size: 0.85em; }
 
 // Images that Sphinx wraps in a link: no underline
@@ -1143,4 +1167,103 @@
     .intro-kicker { opacity: 1; }
     .intro-heading > span { opacity: 1; transform: none; }
     .intro-sub { opacity: 1; transform: none; }
+}
+
+// About me: the name in ink; handle and title "Nekmo" in pink
+.reveal .slides section.on-sheet .about-text p:first-child strong { color: $ink; }
+.reveal .slides section#sobre-mi-nekmo > h2 strong { color: $neon; }
+
+// ---------------------------------------------------------------- headline-only slides
+//
+// Like the author's other decks ("Conectar **un botón**"): the headline is
+// read in two weights. Plain words go in the lighter body face, the key words
+// in the heavy display face (and the accent colour on dark slides).
+// Other headline slides opt in with ``:data-headline: two-weight``.
+.reveal .slides section:is(.on-face, .on-neon, .on-video, [data-headline]) > :is(h1, h2, h3),
+.reveal .slides section:is(.on-face, .on-neon, .on-video) > p,
+.reveal .slides section .big-question {
+    font-family: $font-body;
+    font-weight: 500;
+    strong { font-family: $font-display; font-weight: 400; }
+}
+.reveal .slides section:is(.on-face, .on-video, [data-headline]) > :is(h1, h2, h3) strong,
+.reveal .slides section .big-question strong { color: $neon; }
+.reveal .slides section.on-neon > p strong { color: $shell; }
+
+// 3D labels waiting for their step (``:steps:`` on stackchan-3d)
+.stackchan-3d .sc3d-label.pending { opacity: 0; }
+
+// ---------------------------------------------------------------- fragment images (fragment-images.js)
+//
+// The picture of the point just revealed, large in the bottom-right corner,
+// behind the content like part of the background.
+.reveal .slides section .fragment-images { display: none; }   // until moved to the background
+.reveal .backgrounds .fragment-images {
+    // very large and cut by the bottom-right corner of the screen, like the
+    // chip of "¿Qué es un microcontrolador?": only a quarter of it shows
+    position: absolute;
+    right: -44vh;
+    bottom: -44vh;
+    width: 100vh;
+    height: 100vh;
+    pointer-events: none;
+    img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        opacity: 0;
+        transform: translate(8vh, 8vh) rotate(-14deg);
+        transition: opacity 0.5s, transform 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+    }
+    img.active { opacity: 0.22; transform: rotate(-8deg); }
+    img.ink { filter: brightness(0) invert(13%) sepia(18%) saturate(1200%) hue-rotate(190deg); }   // white logo -> ink
+    img.ink.active { opacity: 0.14; }   // a solid block reads darker
+}
+
+// ---------------------------------------------------------------- fragment map (images/iberia-map.svg)
+
+.reveal .slides section .fragment-map { display: none; }   // until moved to the background
+.reveal .backgrounds .fragment-map {
+    // bottom-right corner; North Africa is cut by the bottom of the screen
+    position: absolute;
+    right: -2vw;
+    bottom: -2.5vh;
+    width: 31vw;
+    transform: rotate(-6deg);   // same tilt as the fragment images
+    transform-origin: 100% 100%;
+    pointer-events: none;
+    svg { width: 100%; height: auto; display: block; overflow: visible; }
+    .map-land { stroke: rgba($ink, 0.25); stroke-width: 1.5; }
+    .map-other { fill: rgba($ink, 0.05); }
+    .map-portugal { fill: rgba($ink, 0.08); }
+    .map-spain { fill: rgba($ink, 0.14); }
+    .map-route {
+        fill: none;
+        stroke: $neon;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-dasharray: 1400;
+        stroke-dashoffset: 1400;
+        opacity: 0.8;
+        &.draw { animation: map-route 1.2s ease-out forwards; }
+    }
+    .map-pin {
+        opacity: 0;
+        transition: opacity 0.4s;
+        .map-dot { fill: $neon; r: 13px; }
+        .map-pulse { fill: none; stroke: $neon; stroke-width: 3; opacity: 0; transform-box: fill-box; transform-origin: center; }
+        text { font: 44px $font-display; fill: $ink; }
+        &.visited { opacity: 0.55; text { font-size: 36px; } }
+        &.active {
+            opacity: 1;
+            .map-pulse { animation: map-pulse 1.6s ease-out infinite; }
+        }
+    }
+}
+@keyframes map-route { to { stroke-dashoffset: 0; } }
+@keyframes map-pulse {
+    0% { opacity: 0.9; transform: scale(0.6); }
+    100% { opacity: 0; transform: scale(3); }
 }

@@ -61,9 +61,20 @@ Sobre mí, **Nekmo**
 
         Nekmo en redes
 
-        * Programador Python en Plytix.
-        * Comunidad Python Málaga.
-        * Charlas y talleres sobre Micropython.
+        .. revealjs-fragments::
+
+            * Programador Python en Plytix.
+            * Comunidad Python Málaga.
+            * Charlas y talleres sobre Micropython.
+
+.. container:: fragment-images
+
+    .. image:: images/python-logo.png
+
+    .. image:: images/python-malaga-logo.png
+
+    .. image:: images/micropython-logo.svg
+       :class: ink
 
 .. revealjs-notes::
 
@@ -83,11 +94,15 @@ Sobre mí, **Nekmo**
 
     .. revealjs-fragments::
 
-        * **OpenSouthCode 2025** Charla en Málaga: Micropython, **programación fácil** y para todos de
-          microcontroladores.
+        * **OpenSouthCode 2025** Charla en Málaga: **primeros pasos** con Micropython.
         * **PyConES 2025** Taller en Sevilla: los asistentes **programaron sus propios ESP32** desde la
           presentación.
         * **PyConES 2026** Hoy: Micropython de verdad, en **un robot de verdad**.
+
+.. container:: fragment-map
+
+    .. raw:: html
+        :file: images/iberia-map.svg
 
 .. revealjs-notes::
 
@@ -141,7 +156,7 @@ La pregunta
 
 .. rst-class:: big-question
 
-¿Y esto para qué sirve?
+¿Y esto **para qué sirve**?
 
 .. revealjs-notes::
 
@@ -197,6 +212,7 @@ Micropython en **microcontroladores**
     :data-sheet: Micropython
     :data-transition: fade
     :data-fx: circuit
+    :data-headline: two-weight
 
 .. image:: images/micropython-logo.svg
    :width: 30%
@@ -214,7 +230,7 @@ Micropython en **microcontroladores**
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Micropython
-    :data-fx: circuit
+    :data-fx: chip
 
 .. revealjs-fragments::
 
@@ -239,19 +255,18 @@ El cerebro: **ESP32-S3**
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Micropython
-    :data-fx: circuit
 
-.. revealjs-fragments::
-
-    * 💪 **Doble núcleo** a 240 MHz.
-    * 🧠 512 KB de SRAM y **PSRAM externa de 8 MB**.
-    * 🛜 **WiFi** y 📡 **Bluetooth LE**.
-    * 🧮 **Instrucciones vectoriales** para IA en el propio chip.
-    * 🔌 **USB nativo**: se programa con el mismo cable que lo alimenta.
+.. stackchan-3d::
+    :mode: board
+    :height: 620px
+    :steps: 6
 
 .. revealjs-notes::
 
-   Stack-chan lleva un ESP32-S3. Es más potente que el ESP32 que usamos en el taller: tiene PSRAM, que nos permitirá
+   (Cada pulsación señala una parte de la placa.) Stack-chan lleva un ESP32-S3: WiFi y Bluetooth con la antena
+   impresa en la propia placa, doble núcleo a 240 MHz, PSRAM, instrucciones vectoriales, 45 pines de propósito
+   general y USB nativo, que nos permite programarlo con el mismo cable que lo alimenta. Es más potente que el
+   ESP32 que usamos en el taller: tiene PSRAM, que nos permitirá
    trabajar con imágenes de la cámara, e instrucciones vectoriales, que acelerarán la inteligencia artificial que
    veremos en el quinto reto.
 
@@ -331,7 +346,10 @@ Casos de **uso**
     :data-background-color: #FF4F9A
     :data-transition: fade
 
-Programar a Stack-chan
+Programar a **Stack-chan**
+
+.. stackchan-3d::
+    :mode: peek
 
 .. revealjs-notes::
 
@@ -1039,7 +1057,10 @@ Demostración **completa**
     :data-background-color: #FF4F9A
     :data-transition: zoom
 
-Todo junto, en Stack-chan
+**Todo junto**, en Stack-chan
+
+.. stackchan-3d::
+    :mode: peek
 
 .. revealjs-notes::
 

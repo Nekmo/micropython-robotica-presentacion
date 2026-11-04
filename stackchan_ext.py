@@ -87,11 +87,13 @@ class MicroPythonDemo(Directive):
 
 class StackChan3D(Directive):
     """three.js Stack-chan. Modes: ``anatomy`` (labelled parts), ``servos``
-    (yaw/pitch sliders) and ``mirror`` (follows the emulator state)."""
+    (yaw/pitch sliders), ``mirror`` (follows the emulator state), ``board``
+    (ESP32-S3 board) and ``peek`` (jumps into a section slide)."""
     option_spec = {
-        'mode': lambda arg: directives.choice(arg, ('anatomy', 'servos', 'mirror')),
+        'mode': lambda arg: directives.choice(arg, ('anatomy', 'servos', 'mirror', 'board', 'peek')),
         'height': directives.unchanged,
         'file': directives.unchanged,
+        'steps': directives.nonnegative_int,
     }
 
     def run(self):
@@ -104,9 +106,12 @@ class StackChan3D(Directive):
             env.note_dependency(rel)
             with open(path, encoding='utf-8') as fh:
                 source = f'<pre class="sc3d-source" style="display: none">{html.escape(fh.read())}</pre>'
+        # labels revealed one by one with the presentation's arrows
+        steps = ''.join('<span class="fragment sc3d-step"></span>'
+                        for _ in range(self.options.get('steps', 0)))
         markup = (
             f'<div class="stackchan-3d" data-mode="{mode}" style="height: {height}">'
-            f'{source}<canvas></canvas><div class="sc3d-labels"></div>'
+            f'{source}{steps}<canvas></canvas><div class="sc3d-labels"></div>'
             '<div class="sc3d-controls"></div></div>'
         )
         return [nodes.raw('', markup, format='html')]
