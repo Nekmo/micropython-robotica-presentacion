@@ -1189,6 +1189,19 @@
 .reveal .slides section:is(.on-face, .on-video, [data-headline]) > :is(h1, h2, h3) strong,
 .reveal .slides section .big-question strong { color: $neon; }
 .reveal .slides section.on-neon > p strong { color: $shell; }
+// Dark face slides: the key words glow with the moving pink/cyan LED
+// gradient of the opening title ("de verdad")
+.reveal .slides section.on-face > :is(h1, h2, h3) strong,
+.reveal .slides section.on-face .big-question strong {
+    background: linear-gradient(90deg, $neon, $led, $neon, $led, $neon);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    color: transparent;
+    animation: led-shimmer 3.2s linear infinite;
+}
 
 // 3D labels waiting for their step (``:steps:`` on stackchan-3d)
 .stackchan-3d .sc3d-label.pending { opacity: 0; }
