@@ -1,13 +1,15 @@
 /*
  * Slide scenes and the living Stack-chan face.
  *
- * Sections declare ``:data-scene: face|sheet|blueprint|neon`` and optionally
- * ``:data-sheet: <text>`` (shown in the drawing title block).
+ * Sections declare ``:data-scene: face|sheet|blueprint|neon|video|boot``,
+ * optionally ``:data-sheet: <text>`` (drawing title block) and
+ * ``:data-big: <text>`` (giant number behind face slides).
  */
 (function () {
     "use strict";
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Animations are part of the talk: they run even when the desktop asks
+    // for reduced motion (KDE can switch that on system-wide).
 
     function el(tag, className, parent, text) {
         const node = document.createElement(tag);
@@ -47,6 +49,8 @@
             slide.classList.add("on-" + scene);
             if (scene === "sheet" || scene === "blueprint") addTitleBlock(background, slide, index + 1);
             if (scene === "neon") addLedStrips(background);
+            // Giant outlined challenge number behind the face ("01".."05")
+            if (slide.dataset.big) el("div", "big-number", background, slide.dataset.big);
         });
     }
 
@@ -91,10 +95,8 @@
 
     function start() {
         decorate();
-        if (!reducedMotion) {
-            animateFaces();
-            scheduleBlink();
-        }
+        animateFaces();
+        scheduleBlink();
         talk(Reveal.getCurrentSlide());
         Reveal.on("slidechanged", (event) => {
             talk(event.currentSlide);

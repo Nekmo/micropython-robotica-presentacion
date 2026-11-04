@@ -16,8 +16,9 @@ from docutils.parsers.rst import Directive, directives
 
 
 DEMO_HTML = '''
-<div class="micropython-demo" data-demo="{name}">
+<div class="micropython-demo" data-demo="{name}" data-steps="{steps}">
   <pre class="demo-source" style="display: none">{code}</pre>
+  {fragments}
   <div class="demo-toolbar">
     <span class="demo-name">{name}</span>
     <span class="status-indicator" title="Desconectado"></span>
@@ -53,6 +54,7 @@ class MicroPythonDemo(Directive):
         'file': directives.unchanged,
         'height': directives.unchanged,
         'name': directives.unchanged,
+        'steps': directives.unchanged,
     }
 
     def run(self):
@@ -67,7 +69,15 @@ class MicroPythonDemo(Directive):
             self.assert_has_content()
             code = '\n'.join(self.content)
             default_name = 'demo'
+        # Line highlights walked with the presentation's arrows (fragments),
+        # like revealjs-code-block's data-line-numbers: "2-4|6|8-10"
+        steps = self.options.get('steps', '').strip()
+        count = len([part for part in steps.split('|') if part.strip()])
+        fragments = ''.join(
+            f'<span class="fragment code-step" data-step="{i}"></span>' for i in range(count))
         markup = DEMO_HTML.format(
+            steps=html.escape(steps),
+            fragments=fragments,
             name=html.escape(self.options.get('name', default_name)),
             code=html.escape(code),
             height=html.escape(self.options.get('height', '580px')),
@@ -102,23 +112,63 @@ class StackChan3D(Directive):
         return [nodes.raw('', markup, format='html')]
 
 
-FACE_HTML = '''
-<div class="sc-face {size}" aria-hidden="true">
+FACE_PARTS = '''
+  <div class="sc-cheek left"></div><div class="sc-cheek right"></div>
   <div class="sc-eye left"><div class="sc-lid"></div></div>
   <div class="sc-eye right"><div class="sc-lid"></div></div>
   <div class="sc-mouth"></div>
-</div>
 '''
+
+FACE_HTML = '''
+<div class="sc-face {size}" data-emotion="{emotion}" aria-hidden="true">''' + FACE_PARTS + '''</div>
+'''
+
+EMOTIONS = ('neutral', 'happy', 'doubt', 'surprised', 'determined')
 
 
 class StackChanFace(Directive):
+    """Animated Stack-chan face: follows the pointer, blinks, shows an emotion."""
     option_spec = {
         'size': lambda arg: directives.choice(arg, ('hero', 'small')),
+        'emotion': lambda arg: directives.choice(arg, EMOTIONS),
     }
 
     def run(self):
         size = self.options.get('size', 'hero')
-        return [nodes.raw('', FACE_HTML.format(size=size), format='html')]
+        emotion = self.options.get('emotion', 'neutral')
+        return [nodes.raw('', FACE_HTML.format(size=size, emotion=emotion), format='html')]
+
+
+INTRO_HTML = '''
+<div class="sc-intro">
+  <div class="intro-robot" role="button" tabindex="0" aria-label="Saludar a Stack-chan">
+    <div class="intro-head">
+      <div class="intro-screen">
+        <pre class="intro-repl"></pre>
+        <div class="sc-face screen" data-emotion="neutral">''' + FACE_PARTS + '''</div>
+        <div class="intro-flash"></div>
+      </div>
+      <div class="intro-camera"></div>
+    </div>
+    <div class="intro-base"></div>
+    <div class="intro-heart" aria-hidden="true">&#9829;</div>
+  </div>
+  <div class="intro-title">
+    <p class="intro-kicker">PyConES 2026</p>
+    <p class="intro-heading"><span>Usando</span> <span>Micropython</span>
+      <span class="intro-truth"><span class="intro-marker" aria-hidden="true"></span>de verdad<span
+        class="intro-truth-glow" aria-hidden="true">de verdad</span></span></p>
+    <p class="intro-sub">Bienvenidos a la robótica</p>
+  </div>
+</div>
+'''
+
+
+class StackChanIntro(Directive):
+    """Opening hook: Stack-chan boots MicroPython, wakes up and presents the talk."""
+
+    def run(self):
+        return [nodes.raw('', INTRO_HTML, format='html')]
 
 
 class Widget(Directive):
@@ -184,6 +234,7 @@ def setup(app):
     app.add_directive('micropython-demo', MicroPythonDemo)
     app.add_directive('stackchan-3d', StackChan3D)
     app.add_directive('stackchan-face', StackChanFace)
+    app.add_directive('stackchan-intro', StackChanIntro)
     app.add_directive('camera-view', CameraView)
     app.add_directive('widget', Widget)
     return {

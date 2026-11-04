@@ -13,12 +13,15 @@
  *   neural      small neural network with signals; nodes near the pointer fire
  *   circuit     PCB traces with travelling electrons, lit near the pointer
  *
- * With prefers-reduced-motion a single still frame is drawn.
+ *   lcd         face slides: glows behind the robot's screen, twinkling pixels
+ *   boot        opening slide: like lcd, plus pixels rising from the floor
+ *
+ * Animations always run, even if the desktop asks for reduced motion (KDE
+ * can switch that on system-wide): they are part of the talk.
  */
 (function () {
     "use strict";
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const pointer = {x: -1000, y: -1000, moved: 0};
     let active = null;            // {slide, canvas, ctx, effect, state}
     let mic = null;               // {analyser, data} when the microphone is on
@@ -278,20 +281,37 @@
         },
 
         circuit: {
-            init(w, h) {
-                // deterministic PCB-like traces along the right half
-                let seed = 7;
+            // PCB traces enter from both edges along fixed lanes. Every trace
+            // jogs down by half a lane at 45°, so neighbours never touch.
+            init(w, h, slide) {
+                let seed = 11;
                 const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+                const lane = 30, top = h * 0.12, bottom = h * 0.88;
+                // on text slides the left traces stay inside the margin
+                const text = slide.dataset.scene === "sheet";
+                const leftReach = text ? 0.07 : 0.17, rightReach = text ? 0.1 : 0.18;
                 const traces = [];
-                // traces enter from the right edge, clear of the text column
-                for (let i = 0; i < 14; i++) {
-                    const pts = [[w + 10, h * (0.14 + i * 0.055)]];
-                    for (let j = 0; j < 4; j++) {
-                        const [x, y] = pts[pts.length - 1];
-                        pts.push(j % 2 === 0 ? [x - 20 - rand() * w * 0.06, y] : [x - 24, y + (rand() - 0.5) * 60]);
+                [-1, 1].forEach((side) => {
+                    for (let y = top; y < bottom; y += lane) {
+                        if (rand() < 0.3) continue;
+                        const inward = -side;
+                        const edge = side < 0 ? -10 : w + 10;
+                        const reach = w * (side < 0 ? leftReach : rightReach) * (0.45 + rand() * 0.55);
+                        const jog = reach * (0.3 + rand() * 0.3);
+                        traces.push({
+                            pts: [[edge, y], [edge + inward * jog, y],
+                                [edge + inward * (jog + lane / 2), y + lane / 2],
+                                [edge + inward * reach, y + lane / 2]],
+                            phase: rand(),
+                            speed: 0.05 + rand() * 0.05,
+                        });
                     }
-                    traces.push({pts, phase: rand()});
-                }
+                });
+                traces.forEach((trace) => {
+                    trace.lengths = trace.pts.slice(1).map(([x, y], i) =>
+                        Math.hypot(x - trace.pts[i][0], y - trace.pts[i][1]));
+                    trace.total = trace.lengths.reduce((a, b) => a + b, 0);
+                });
                 return {traces};
             },
             draw(ctx, w, h, t, s, c) {
@@ -299,7 +319,7 @@
                 ctx.lineJoin = "round";
                 s.traces.forEach((trace) => {
                     const near = trace.pts.some(([x, y]) => Math.hypot(pointer.x - x, pointer.y - y) < 90);
-                    ctx.strokeStyle = near ? `rgba(${c.accent}, 0.7)` : `rgba(${c.line}, ${c.soft})`;
+                    ctx.strokeStyle = near ? `rgba(${c.accent}, 0.75)` : `rgba(${c.line}, ${c.soft * 1.2})`;
                     ctx.beginPath();
                     trace.pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
                     ctx.stroke();
@@ -307,31 +327,92 @@
                     ctx.beginPath();
                     ctx.arc(ex, ey, 6, 0, Math.PI * 2);
                     ctx.stroke();
-                    // an electron travelling along the trace
-                    const lengths = trace.pts.slice(1).map(([x, y], i) => Math.hypot(x - trace.pts[i][0], y - trace.pts[i][1]));
-                    const total = lengths.reduce((a, b) => a + b, 0);
-                    let d = ((t / (near ? 4 : 14) + trace.phase * total) % total);
-                    for (let i = 0; i < lengths.length; i++) {
-                        if (d <= lengths[i]) {
+                    // the electron travels to the pad and starts again
+                    let d = ((t * trace.speed * (near ? 3 : 1)) + trace.phase * trace.total) % trace.total;
+                    for (let i = 0; i < trace.lengths.length; i++) {
+                        if (d <= trace.lengths[i]) {
                             const [ax, ay] = trace.pts[i], [bx, by] = trace.pts[i + 1];
-                            const k = d / lengths[i];
-                            ctx.fillStyle = `rgba(${c.accent}, 0.9)`;
+                            const k = d / trace.lengths[i];
+                            ctx.fillStyle = `rgba(${c.accent}, 0.95)`;
                             ctx.beginPath();
                             ctx.arc(ax + (bx - ax) * k, ay + (by - ay) * k, 4, 0, Math.PI * 2);
                             ctx.fill();
                             break;
                         }
-                        d -= lengths[i];
+                        d -= trace.lengths[i];
                     }
                 });
             },
         },
+
+        lcd: {
+            init(w, h) {
+                let seed = 5;
+                const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+                const pixels = Array.from({length: 70}, () => ({
+                    x: rand() * w, y: rand() * h, size: 3 + Math.floor(rand() * 3) * 2,
+                    phase: rand() * Math.PI * 2, speed: 0.6 + rand(), pink: rand() < 0.35,
+                }));
+                return {pixels, rising: []};
+            },
+            draw(ctx, w, h, t, s) {
+                // two glows orbiting behind the face, nudged by the pointer
+                const px = pointer.x > 0 ? (pointer.x / w - 0.5) : 0;
+                const py = pointer.y > 0 ? (pointer.y / h - 0.5) : 0;
+                [["255, 79, 154", 0], ["57, 208, 216", Math.PI]].forEach(([rgb, offset]) => {
+                    const a = t / 5200 + offset;
+                    const gx = w * (0.5 + 0.22 * Math.cos(a) + px * 0.08);
+                    const gy = h * (0.45 + 0.16 * Math.sin(a) + py * 0.08);
+                    const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, Math.max(w, h) * 0.38);
+                    g.addColorStop(0, `rgba(${rgb}, 0.22)`);
+                    g.addColorStop(1, `rgba(${rgb}, 0)`);
+                    ctx.fillStyle = g;
+                    ctx.fillRect(0, 0, w, h);
+                });
+                // twinkling pixels, like a screen waking up
+                s.pixels.forEach((p) => {
+                    const alpha = 0.15 + 0.35 * (0.5 + 0.5 * Math.sin(t / 700 * p.speed + p.phase));
+                    ctx.fillStyle = p.pink ? `rgba(255, 79, 154, ${alpha})` : `rgba(233, 238, 242, ${alpha * 0.7})`;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                });
+                // slow scanline band
+                const band = (t / 18) % (h + 200) - 100;
+                const g = ctx.createLinearGradient(0, band - 60, 0, band + 60);
+                g.addColorStop(0, "rgba(255,255,255,0)");
+                g.addColorStop(0.5, "rgba(255,255,255,0.035)");
+                g.addColorStop(1, "rgba(255,255,255,0)");
+                ctx.fillStyle = g;
+                ctx.fillRect(0, band - 60, w, 120);
+            },
+        },
     };
+
+    // the opening slide: lcd plus pixels rising like bubbles
+    effects.boot = {
+        init: (w, h) => effects.lcd.init(w, h),
+        draw(ctx, w, h, t, s, c) {
+            effects.lcd.draw(ctx, w, h, t, s, c);
+            if (s.rising.length < 40 && Math.random() < 0.2) {
+                s.rising.push({x: Math.random() * w, y: h + 10, v: 0.4 + Math.random() * 1.2,
+                    size: 4 + Math.floor(Math.random() * 3) * 2, pink: Math.random() < 0.5});
+            }
+            s.rising = s.rising.filter((p) => {
+                p.y -= p.v;
+                p.x += Math.sin((t + p.y * 7) / 900) * 0.3;
+                const alpha = Math.min(1, p.y / h) * 0.6;
+                ctx.fillStyle = p.pink ? `rgba(255, 79, 154, ${alpha})` : `rgba(57, 208, 216, ${alpha})`;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+                return p.y > -20;
+            });
+        },
+    };
+
+    const SCENE_DEFAULTS = {face: "lcd", boot: "boot"};
 
     // ---------------------------------------------------------------- lifecycle
 
     function attach(slide) {
-        const name = slide.dataset.fx;
+        const name = slide.dataset.fx || SCENE_DEFAULTS[slide.dataset.scene];
         const effect = effects[name];
         if (!effect) return null;
         const background = Reveal.getSlideBackground(slide);
@@ -347,7 +428,7 @@
         canvas.height = h * ratio;
         const ctx = canvas.getContext("2d");
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-        return {slide, canvas, ctx, effect, w, h, colors: palette(slide), state: effect.init ? effect.init(w, h) : {}};
+        return {slide, canvas, ctx, effect, w, h, colors: palette(slide), state: effect.init ? effect.init(w, h, slide) : {}};
     }
 
     function frame(t) {
@@ -355,12 +436,12 @@
         const {ctx, w, h, effect, state, colors} = active;
         ctx.clearRect(0, 0, w, h);
         effect.draw(ctx, w, h, t, state, colors);
-        if (!reducedMotion) requestAnimationFrame(frame);
+        requestAnimationFrame(frame);
     }
 
     function show(slide) {
         if (active && active.canvas) active.ctx.clearRect(0, 0, active.w, active.h);
-        active = slide.dataset.fx ? attach(slide) : null;
+        active = (slide.dataset.fx || SCENE_DEFAULTS[slide.dataset.scene]) ? attach(slide) : null;
         if (active) requestAnimationFrame(frame);
     }
 

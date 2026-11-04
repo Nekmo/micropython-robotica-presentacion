@@ -5,22 +5,18 @@ Usando Micropython de verdad
 ############################
 
 .. revealjs-section::
-    :data-scene: face
+    :data-scene: boot
     :data-background-color: #000000
     :data-transition: fade
     :data-transition-speed: slow
 
-.. stackchan-face::
-
-.. rst-class:: kicker
-
-Bienvenidos a la robótica
+.. stackchan-intro::
 
 .. revealjs-notes::
 
-   Hola a todos, muchas gracias por venir. Os presento a mi compañero de charla de hoy... (señalar al robot).
-   Bueno, a la cara que veis en pantalla. Es Stack-chan, y durante esta charla va a ser nuestro conejillo de
-   indias.
+   (Esperar a que arranque la animación: el robot se enciende, escribe en su consola de Micropython y despierta.)
+   Hola a todos, muchas gracias por venir. Este de aquí es Stack-chan, y durante esta charla va a ser nuestro
+   conejillo de indias. Podéis hacerle clic: se pone contento.
 
 
 
@@ -34,6 +30,7 @@ Bienvenidos a la robótica
 
 .. micropython-demo::
     :file: demos/demo0_hola/demo.py
+    :steps: 2-4|6-10|12-13|14-15
     :height: 560px
 
 .. revealjs-notes::
@@ -84,9 +81,13 @@ Sobre mí, **Nekmo**
 
 .. container:: timeline
 
-    * **OpenSouthCode** Charla en Málaga: Micropython, programación fácil y para todos de microcontroladores.
-    * **PyConES 2025** Taller en Sevilla: los asistentes programaron sus propios ESP32 desde la presentación.
-    * **PyConES 2026** Hoy: Micropython de verdad, en un robot de verdad.
+    .. revealjs-fragments::
+
+        * **OpenSouthCode 2025** Charla en Málaga: Micropython, **programación fácil** y para todos de
+          microcontroladores.
+        * **PyConES 2025** Taller en Sevilla: los asistentes **programaron sus propios ESP32** desde la
+          presentación.
+        * **PyConES 2026** Hoy: Micropython de verdad, en **un robot de verdad**.
 
 .. revealjs-notes::
 
@@ -136,6 +137,7 @@ La pregunta
 
 .. stackchan-face::
     :size: small
+    :emotion: doubt
 
 .. rst-class:: big-question
 
@@ -154,9 +156,13 @@ La pregunta
     :data-scene: face
     :data-background-color: #000000
 
+.. stackchan-face::
+    :size: small
+    :emotion: surprised
+
 .. rst-class:: big-question
 
-¿De verdad puede usarse Micropython en algo más serio?
+¿De verdad puede usarse Micropython en algo **más serio**?
 
 .. revealjs-notes::
 
@@ -168,38 +174,17 @@ Bienvenidos a la **robótica**
 -----------------------------
 
 .. revealjs-section::
-    :data-scene: neon
-    :data-background-color: #FF4F9A
+    :data-scene: video
+    :data-background-color: #000000
+    :data-background-video: _static/robot_fall.mp4
+    :data-background-video-loop: true
+    :data-background-video-muted: true
+    :data-background-size: cover
     :data-transition: zoom
 
 .. revealjs-notes::
 
-   Bienvenidos todos a la robótica con Micropython.
-
-
-
-Hoja de **ruta**
-================
-
-.. revealjs-section::
-    :data-scene: sheet
-    :data-background-color: #E9EEF2
-    :data-sheet: Índice
-
-#. Micropython en microcontroladores.
-#. Casos de uso: programar a Stack-chan.
-#. Primer reto: controlar los servos.
-#. Segundo reto: sensores del robot.
-#. Tercer reto: micrófono y cámara.
-#. Cuarto reto: dibujar en la pantalla.
-#. Quinto reto: inteligencia artificial en un ESP32.
-#. Demostración completa con Stack-chan.
-
-.. revealjs-notes::
-
-   Este será nuestro camino. Primero un repaso rápido de qué es Micropython, para quienes no vinieron a las
-   anteriores. Luego conoceremos a nuestro robot, y después iremos superando retos, cada uno con su demo en directo.
-   Al final, juntaremos todo en una demostración completa.
+   Bienvenidos todos a la robótica con Micropython. Donde, como veis, no siempre todo sale a la primera.
 
 
 
@@ -233,14 +218,16 @@ Micropython en **microcontroladores**
 
 .. revealjs-fragments::
 
-    * Un ordenador completo en un solo chip: CPU, memoria y periféricos.
-    * 🤏 Pequeño, 🤑 económico y 🪫 de bajo consumo.
-    * Habla directamente con el hardware: motores, sensores, LEDs...
-    * Sin sistema operativo: tu programa es lo único que se ejecuta.
+    * Un **chip** que integra **procesador, memoria y periféricos**.
+    * 🤏 **Pequeño**, 🤑 **económico** y 🪫 de **bajo consumo**.
+    * Habla **directamente con el hardware**: motores, sensores, LEDs...
+    * **Sin sistema operativo**: tu programa es lo único que se ejecuta.
 
 .. revealjs-notes::
 
-   Un microcontrolador es un pequeño ordenador en un único chip. Al no tener sistema operativo, nuestro programa
+   Un microcontrolador es un chip que reúne en una sola pieza el procesador, la memoria y los periféricos para
+   comunicarse con el exterior. No es un ordenador como el vuestro: está pensado para hacer una tarea concreta,
+   y al no tener sistema operativo, nuestro programa
    controla directamente el hardware, sin intermediarios. Por eso son perfectos para robótica: responden en tiempo
    real y gastan muy poco.
 
@@ -256,11 +243,11 @@ El cerebro: **ESP32-S3**
 
 .. revealjs-fragments::
 
-    * 💪 Doble núcleo a 240 MHz.
-    * 🧠 512 KB de SRAM y PSRAM externa de 8 MB.
-    * 🛜 WiFi y 📡 Bluetooth LE.
-    * 🧮 Instrucciones vectoriales para IA en el propio chip.
-    * 🔌 USB nativo: se programa con el mismo cable que lo alimenta.
+    * 💪 **Doble núcleo** a 240 MHz.
+    * 🧠 512 KB de SRAM y **PSRAM externa de 8 MB**.
+    * 🛜 **WiFi** y 📡 **Bluetooth LE**.
+    * 🧮 **Instrucciones vectoriales** para IA en el propio chip.
+    * 🔌 **USB nativo**: se programa con el mismo cable que lo alimenta.
 
 .. revealjs-notes::
 
@@ -279,10 +266,10 @@ El cerebro: **ESP32-S3**
 
 .. revealjs-fragments::
 
-    * Una implementación de Python 3 para microcontroladores.
-    * Intérprete y REPL en el propio chip, en 256 KB de flash.
-    * Módulos para el hardware: ``machine``, ``network``, ``asyncio``...
-    * Compatible con la mayor parte de lo que ya sabes de Python.
+    * Una implementación de **Python 3** para microcontroladores.
+    * **Intérprete y REPL** en el propio chip, en 256 KB de flash.
+    * **Módulos para el hardware**: ``machine``, ``network``, ``asyncio``...
+    * Compatible con **la mayor parte de lo que ya sabes** de Python.
 
 .. revealjs-notes::
 
@@ -301,10 +288,10 @@ El cerebro: **ESP32-S3**
 
 .. revealjs-fragments::
 
-    * 🔁 Probar un movimiento lleva segundos, no minutos de compilación.
-    * 🐍 El mismo lenguaje en el robot, en el servidor y en la IA.
-    * ⚡ Cuando hace falta velocidad: ``@micropython.viper`` o módulos en C.
-    * 🧪 Se puede simular y probar en el ordenador.
+    * 🔁 Probar un movimiento lleva **segundos**, no minutos de compilación.
+    * 🐍 **El mismo lenguaje** en el robot, en el servidor y en la IA.
+    * ⚡ Cuando hace falta **velocidad**: ``@micropython.viper`` o módulos en C.
+    * 🧪 Se puede **simular** y probar en el ordenador.
 
 .. revealjs-notes::
 
@@ -323,10 +310,10 @@ Nuestras **herramientas**
 
 .. revealjs-fragments::
 
-    * 📦 **UIFlow 2**: el firmware Micropython de M5Stack, con soporte para el robot.
-    * 🧰 **mpytool**: subir ficheros y reiniciar desde la terminal.
-    * 🥽 **esp-emulator**: simulador de Stack-chan, también dentro de esta presentación.
-    * 🖥️ **Esta presentación**: envía código al robot por Web Serial.
+    * 📦 **UIFlow 2**: el **firmware Micropython** de M5Stack, con soporte para el robot.
+    * 🧰 **mpytool**: **subir ficheros** y reiniciar desde la terminal.
+    * 🥽 **esp-emulator**: **simulador** de Stack-chan, también dentro de esta presentación.
+    * 🖥️ **Esta presentación**: **envía código al robot** por Web Serial.
 
 .. revealjs-notes::
 
@@ -348,38 +335,7 @@ Programar a Stack-chan
 
 .. revealjs-notes::
 
-   Vamos con los casos de uso. ¿Qué podemos construir con Micropython? Os presento al robot de hoy.
-
-
-Os presento a **Stack-chan**
-----------------------------
-
-.. revealjs-section::
-    :data-scene: sheet
-    :data-background-color: #E9EEF2
-    :data-sheet: Stack-chan
-
-.. container:: two-cols
-
-    .. container::
-
-        .. revealjs-fragments::
-
-            * Un robot adorable, nacido en la comunidad japonesa.
-            * Software open source y hardware libre.
-            * Se vende ya montado y a un precio asequible.
-            * Una gran comunidad de usuarios y extensiones.
-
-    .. container::
-
-        .. camera-view::
-            :mode: side
-
-.. revealjs-notes::
-
-   Este es Stack-chan. Es un robot open source y de hardware libre, creado por la comunidad japonesa, que ha
-   enamorado a medio mundo. Lo mejor es que hoy podéis comprarlo ya montado, a un precio asequible, sin soldar
-   nada. Lo tenéis aquí en la cámara. Saluda, Stack-chan.
+   Vamos con los casos de uso. ¿Qué podemos construir con Micropython? Para verlo, usaremos un robot.
 
 
 **Anatomía** de Stack-chan
@@ -396,7 +352,8 @@ Os presento a **Stack-chan**
 
 .. revealjs-notes::
 
-   Veamos qué lleva dentro. La cabeza es un ordenador completo: pantalla táctil, cámara, micrófono, altavoz, un
+   Este es Stack-chan: un robot open source y de hardware libre, creado por la comunidad japonesa, que hoy se
+   puede comprar ya montado. Veamos qué lleva dentro. En la cabeza hay un M5Stack CoreS3: pantalla táctil, cámara, micrófono, altavoz, un
    acelerómetro y el ESP32-S3. Arriba, un sensor táctil con tres zonas y doce LEDs. Y en el cuerpo, la batería y dos
    servos: uno para girar y otro para inclinar la cabeza. Podéis girar el modelo con el ratón.
 
@@ -428,70 +385,6 @@ Hoja de **especificaciones**
    serie: no son los servos baratos de modelismo, sino servos que nos pueden decir dónde están.
 
 
-Firmware en **Micropython**
----------------------------
-
-.. revealjs-section::
-    :data-scene: blueprint
-    :data-background-color: #1F2A44
-    :data-sheet: Stack-chan
-
-.. revealjs-fragments::
-
-    * El firmware oficial de 2026 está escrito en C++.
-    * Lo he portado a Micropython: **stackchan-micropython**.
-    * Avatar, emociones, bailes, servos con muelles amortiguados, control remoto...
-    * Unas 3.600 líneas de Python, módulo a módulo con el original.
-
-.. revealjs-notes::
-
-   El firmware oficial de Stack-chan está en C++. Para demostrar que Micropython sirve para algo serio, lo he
-   portado entero: el avatar con sus emociones, los bailes, el movimiento de los servos con física de muelles, el
-   control remoto... Unas 3600 líneas de Python que funcionan en el robot y en el simulador.
-
-
-Un **simulador** propio
------------------------
-
-.. revealjs-section::
-    :data-scene: blueprint
-    :data-background-color: #1F2A44
-    :data-sheet: Stack-chan
-
-.. image:: images/esp-emulator.png
-   :width: 78%
-   :align: center
-
-.. revealjs-notes::
-
-   Y como no siempre tengo el robot a mano, he hecho un simulador: esp-emulator. Ejecuta el mismo código de
-   Micropython, con la pantalla, los servos, los LEDs, los sensores e incluso el micrófono. Y una versión de él
-   funciona dentro de esta misma presentación, en el navegador, por si el robot decide no colaborar.
-
-
-¿Por qué **Stack-chan**?
-------------------------
-
-.. revealjs-section::
-    :data-scene: sheet
-    :data-background-color: #E9EEF2
-    :data-sheet: Stack-chan
-
-.. container:: robots
-
-    * **Stack-chan** Ya montado: sacar de la caja y programar.
-    * **Robot DIY** Chasis, motores, drivers y soldador: semanas de montaje.
-    * **Tu robot** Empieza por uno montado y aprende electrónica después.
-
-.. revealjs-notes::
-
-   ¿Por qué Stack-chan? Montar un robot desde cero exige chasis, motores, controladores, soldar y bastantes
-   conocimientos de electrónica: semanas de trabajo antes de escribir la primera línea de código. Stack-chan llega
-   montado, así que podemos centrarnos en lo que hoy nos importa: programarlo en Micropython. Cuando lo domines, el
-   salto a un robot hecho por ti será mucho más fácil.
-
-
-
 Primer reto: los **servos**
 ===========================
 
@@ -499,9 +392,11 @@ Primer reto: los **servos**
     :data-scene: face
     :data-background-color: #000000
     :data-transition: fade
+    :data-big: 01
 
 .. stackchan-face::
     :size: small
+    :emotion: determined
 
 .. rst-class:: dimension
 
@@ -523,10 +418,10 @@ Reto 1 de 5
 
 .. revealjs-fragments::
 
-    * Un motor, una reductora y un sensor de posición.
-    * Le pedimos un ángulo y él mismo corrige hasta llegar.
-    * Los de modelismo se controlan por PWM: solo escuchan.
-    * Los de bus serie, como los de Stack-chan, también responden.
+    * Un **motor**, una **reductora** y un **sensor de posición**.
+    * Le pedimos **un ángulo** y él mismo **corrige hasta llegar**.
+    * Los de modelismo se controlan por **PWM**: solo escuchan.
+    * Los de **bus serie**, como los de Stack-chan, **también responden**.
 
 .. revealjs-notes::
 
@@ -546,7 +441,8 @@ Servo de **modelismo** (PWM)
 
 .. container:: wide-cols
 
-    .. code-block:: python
+    .. revealjs-code-block:: python
+        :data-line-numbers: 1-12|1|3|6-9|12
 
         from machine import Pin, PWM
 
@@ -579,7 +475,8 @@ Servos de **Stack-chan**
     :data-sheet: Reto 1: servos
     :data-fx: protractor
 
-.. code-block:: python
+.. revealjs-code-block:: python
+    :data-line-numbers: 1-9|1-3|4-5|7|8-9
 
     from hardware.stackchan import StackChan
 
@@ -626,6 +523,7 @@ Demo: **sí** y **no**
 
 .. micropython-demo::
     :file: demos/demo1_servos/demo.py
+    :steps: 5-9|11-13|16-19|22-25|26-29
 
 .. revealjs-notes::
 
@@ -644,6 +542,7 @@ Demo: movimiento **natural**
 
 .. micropython-demo::
     :file: demos/demo2_mirada/demo.py
+    :steps: 13-14|17-22|25-27
 
 .. revealjs-notes::
 
@@ -681,9 +580,11 @@ Segundo reto: los **sensores**
     :data-scene: face
     :data-background-color: #000000
     :data-transition: fade
+    :data-big: 02
 
 .. stackchan-face::
     :size: small
+    :emotion: determined
 
 .. rst-class:: dimension
 
@@ -706,9 +607,9 @@ Reto 2 de 5
 
 .. revealjs-fragments::
 
-    * ✋ **Táctil**: tres zonas en la cabeza para acariciarlo.
-    * 🧭 **IMU**: acelerómetro y giroscopio, sabe si lo inclinas o lo agitas.
-    * 💡 **Luz y proximidad**: sabe si hay luz y si te acercas.
+    * ✋ **Táctil**: **tres zonas** en la cabeza para acariciarlo.
+    * 🧭 **IMU**: acelerómetro y giroscopio, sabe si lo **inclinas** o lo **agitas**.
+    * 💡 **Luz y proximidad**: sabe si hay luz y si **te acercas**.
     * 🔋 **Batería**: tensión, corriente y potencia.
 
 .. revealjs-notes::
@@ -728,6 +629,7 @@ Demo: **acaríciame**
 
 .. micropython-demo::
     :file: demos/demo3_cabeza/demo.py
+    :steps: 6-7|10|12-15|16-17
 
 .. revealjs-notes::
 
@@ -746,6 +648,7 @@ Demo: **nivel** de burbuja
 
 .. micropython-demo::
     :file: demos/demo4_imu/demo.py
+    :steps: 11|13|14-16|17-19
 
 .. revealjs-notes::
 
@@ -764,6 +667,7 @@ Demo: Stack-chan **tímido**
 
 .. micropython-demo::
     :file: demos/demo5_proximidad/demo.py
+    :steps: 15-16|17-20|21-24
 
 .. revealjs-notes::
 
@@ -780,9 +684,11 @@ Tercer reto: **micrófono** y **cámara**
     :data-scene: face
     :data-background-color: #000000
     :data-transition: fade
+    :data-big: 03
 
 .. stackchan-face::
     :size: small
+    :emotion: determined
 
 .. rst-class:: dimension
 
@@ -804,10 +710,10 @@ Reto 3 de 5
 
 .. revealjs-fragments::
 
-    * El audio llega por I2S: 16.000 muestras de 16 bits por segundo.
-    * Micrófono y altavoz comparten el bus: uno a la vez.
-    * Grabamos en un ``array`` para no crear objetos en cada muestra.
-    * Con el pico de cada bloque ya sabemos si hay ruido.
+    * El audio llega por **I2S**: **16.000 muestras** de 16 bits por segundo.
+    * Micrófono y altavoz **comparten el bus**: uno a la vez.
+    * Grabamos en un ``array`` para **no crear objetos** en cada muestra.
+    * Con el **pico** de cada bloque ya sabemos si hay ruido.
 
 .. revealjs-notes::
 
@@ -826,6 +732,7 @@ Demo: **vúmetro**
 
 .. micropython-demo::
     :file: demos/demo6_microfono/demo.py
+    :steps: 9-11|14-16|20-22|23-26
 
 .. revealjs-notes::
 
@@ -844,9 +751,9 @@ Demo: **vúmetro**
 
 .. revealjs-fragments::
 
-    * Cámara GC0308 de 0,3 megapíxeles, bajo la pantalla.
-    * Una imagen QVGA en RGB565 ocupa 150 KB: va a la PSRAM.
-    * ``camera.snapshot()`` captura, ``M5.Lcd.show()`` la pinta.
+    * Cámara **GC0308** de **0,3 megapíxeles**, bajo la pantalla.
+    * Una imagen QVGA en RGB565 ocupa **150 KB**: va a la **PSRAM**.
+    * ``camera.snapshot()`` **captura**, ``M5.Lcd.show()`` la **pinta**.
 
 .. revealjs-notes::
 
@@ -864,6 +771,7 @@ Demo: lo que **ve** Stack-chan
 
 .. micropython-demo::
     :file: demos/demo7_camara/demo.py
+    :steps: 6|10|11
 
 .. revealjs-notes::
 
@@ -895,9 +803,11 @@ Cuarto reto: la **pantalla**
     :data-scene: face
     :data-background-color: #000000
     :data-transition: fade
+    :data-big: 04
 
 .. stackchan-face::
     :size: small
+    :emotion: determined
 
 .. rst-class:: dimension
 
@@ -924,17 +834,17 @@ Dos formas de **dibujar**
 
         **M5GFX**
 
-        * Primitivas: rectángulos, círculos, texto.
-        * Pintas y te olvidas.
-        * Ideal para empezar.
+        * **Primitivas**: rectángulos, círculos, texto.
+        * **Pintas y te olvidas**.
+        * Ideal para **empezar**.
 
     .. container::
 
         **LVGL**
 
-        * Objetos con estilos y animaciones.
-        * Solo repinta lo que cambia.
-        * Lo que usa el firmware real.
+        * **Objetos** con estilos y animaciones.
+        * Solo **repinta lo que cambia**.
+        * Lo que usa el **firmware real**.
 
 .. revealjs-notes::
 
@@ -953,6 +863,7 @@ Demo: dibujar una **cara**
 
 .. micropython-demo::
     :file: demos/demo8_pantalla/demo.py
+    :steps: 13-20|24-25|27-28
 
 .. revealjs-notes::
 
@@ -971,6 +882,7 @@ Demo: **emociones**
 
 .. micropython-demo::
     :file: demos/demo9_avatar/demo.py
+    :steps: 8-12|20-25|28-30|32-35
 
 .. revealjs-notes::
 
@@ -987,9 +899,11 @@ Quinto reto: **inteligencia artificial**
     :data-scene: face
     :data-background-color: #000000
     :data-transition: fade
+    :data-big: 05
 
 .. stackchan-face::
     :size: small
+    :emotion: determined
 
 .. rst-class:: dimension
 
@@ -1014,17 +928,17 @@ Dos **caminos**
 
         **En el propio chip**
 
-        * Detección de caras y objetos (ESP-DL).
-        * Modelos pequeños: TFLite Micro, emlearn.
-        * Sin red, sin latencia, sin enviar datos.
+        * **Detección de caras** y objetos (ESP-DL).
+        * **Modelos pequeños**: TFLite Micro, emlearn.
+        * **Sin red**, sin latencia, **sin enviar datos**.
 
     .. container::
 
         **En la nube**
 
-        * Modelos de lenguaje por HTTPS.
-        * Agentes de voz para ESP32.
-        * Toda la potencia, a cambio de red.
+        * **Modelos de lenguaje** por HTTPS.
+        * **Agentes de voz** para ESP32.
+        * **Toda la potencia**, a cambio de red.
 
 .. revealjs-notes::
 
@@ -1043,6 +957,7 @@ Demo: **sígueme**
 
 .. micropython-demo::
     :file: demos/demo10_caras/demo.py
+    :steps: 9|17-18|20-22|23-26|27-29
 
 .. revealjs-notes::
 
@@ -1059,7 +974,8 @@ Control **proporcional**
     :data-background-color: #E9EEF2
     :data-sheet: Reto 5: IA
 
-.. code-block:: python
+.. revealjs-code-block:: python
+    :data-line-numbers: 1-2|1|2
 
     error = face_x - 160          # how far from the centre?
     yaw -= error * 0.05           # correct a fraction of it
@@ -1083,6 +999,7 @@ Demo: pregúntale a **Claude**
 
 .. micropython-demo::
     :file: demos/demo11_claude/demo.py
+    :steps: 14-18|22-29|30-38|40-44|47-52
 
 .. revealjs-notes::
 
@@ -1102,10 +1019,10 @@ Los **límites**
 
 .. revealjs-fragments::
 
-    * 🧠 Memoria: modelos de pocos megas, imágenes pequeñas.
-    * 🛜 Red: sin WiFi, solo queda la IA local.
-    * 🔋 Batería: la WiFi y los servos son lo que más consume.
-    * 🔐 Secretos: las claves viven en el robot, no en el código.
+    * 🧠 **Memoria**: modelos de pocos megas, imágenes pequeñas.
+    * 🛜 **Red**: sin WiFi, solo queda la IA local.
+    * 🔋 **Batería**: la WiFi y los servos son lo que más consume.
+    * 🔐 **Secretos**: las claves viven en el robot, no en el código.
 
 .. revealjs-notes::
 
@@ -1139,6 +1056,7 @@ Demo: ¡a **bailar**!
 
 .. micropython-demo::
     :file: demos/demo12_final/demo.py
+    :steps: 22-29|31-34|35-39
 
 .. revealjs-notes::
 
@@ -1174,6 +1092,7 @@ Stack-chan, **en vivo**
     :data-transition: fade
 
 .. stackchan-face::
+    :emotion: happy
 
 .. revealjs-notes::
 

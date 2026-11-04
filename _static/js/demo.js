@@ -123,6 +123,50 @@
         setupResizer(root, editor);
         updateToolbars();
         applyFontSize();
+        applyStep(root);
+    }
+
+    // ---- Step-by-step line highlights (":steps: 2-4|6|8-10") ----
+    function parseSteps(text) {
+        return (text || "").split("|").map((part) => part.trim()).filter(Boolean).map((part) =>
+            part.split(",").map((range) => {
+                const [a, b] = range.split("-").map((n) => parseInt(n, 10));
+                return [a, b || a];
+            }));
+    }
+
+    function currentStep(root) {
+        return root.querySelectorAll(".code-step.visible").length - 1;   // -1: no highlight
+    }
+
+    function applyStep(root) {
+        const editor = editors.get(root);
+        if (!editor) return;
+        const monaco = window.monaco;
+        const steps = parseSteps(root.dataset.steps);
+        const step = currentStep(root);
+        const lines = editor.getModel().getLineCount();
+        const decorations = [];
+        if (step >= 0 && steps[step]) {
+            const ranges = steps[step];
+            const inStep = (line) => ranges.some(([a, b]) => line >= a && line <= b);
+            for (let line = 1; line <= lines; line++) {
+                decorations.push({
+                    range: new monaco.Range(line, 1, line, 1),
+                    options: inStep(line)
+                        ? {isWholeLine: true, className: "code-step-line", linesDecorationsClassName: "code-step-gutter"}
+                        : {isWholeLine: true, inlineClassName: "code-step-dim"},
+                });
+            }
+            editor.revealLinesInCenterIfOutsideViewport(ranges[0][0], ranges[ranges.length - 1][1]);
+        }
+        root.stepDecorations = editor.deltaDecorations(root.stepDecorations || [], decorations);
+    }
+
+    function onFragment(event) {
+        if (!event.fragment.classList.contains("code-step")) return;
+        const root = event.fragment.closest(".micropython-demo");
+        if (root) applyStep(root);
     }
 
     function setupResizer(root, editor) {
@@ -153,6 +197,8 @@
     function start() {
         onSlide(Reveal.getCurrentSlide());
         Reveal.on("slidechanged", (event) => onSlide(event.currentSlide));
+        Reveal.on("fragmentshown", onFragment);
+        Reveal.on("fragmenthidden", onFragment);
     }
     // reveal.js loads after this file: wait for the DOM, then for Reveal
     document.addEventListener("DOMContentLoaded", () => {

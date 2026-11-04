@@ -229,6 +229,11 @@
                 this.leaders = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 this.leaders.classList.add("sc3d-leaders");
                 labels.appendChild(this.leaders);
+                // Lines to parts hidden by the robot are drawn *behind* the
+                // WebGL canvas: the model itself covers the hidden stretch
+                this.leadersBack = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                this.leadersBack.classList.add("sc3d-leaders", "back");
+                this.root.insertBefore(this.leadersBack, this.canvas);
                 this.labels = Object.entries(LABELS).map(([key, text]) => {
                     const label = document.createElement("span");
                     label.className = "sc3d-label";
@@ -355,7 +360,7 @@
                 item.y = (1 - p.y) / 2 * h;
                 columns[LABEL_SIDE[item.key]].push(item);
             });
-            const lines = [];
+            const lines = [], hiddenLines = [];
             Object.entries(columns).forEach(([side, items]) => {
                 items.sort((a, b) => a.y - b.y);
                 let last = -Infinity;
@@ -367,14 +372,15 @@
                         : Math.min(w * 0.8, w - item.label.offsetWidth - 8);
                     item.label.style.transform = `translate(${x}px, ${y}px)`;
                     item.label.classList.toggle("left", side === "left");
-                    item.label.classList.toggle("occluded", item.hidden);
-                    if (item.hidden) return;   // the part is behind the robot: no leader line
-                    lines.push(`<line x1="${x}" y1="${y}" x2="${item.x}" y2="${item.y}"/>` +
-                        `<circle cx="${item.x}" cy="${item.y}" r="5"/>`);
+                    const line = `<line x1="${x}" y1="${y}" x2="${item.x}" y2="${item.y}"/>` +
+                        `<circle cx="${item.x}" cy="${item.y}" r="5"/>`;
+                    (item.hidden ? hiddenLines : lines).push(line);
                 });
             });
             this.leaders.setAttribute("viewBox", `0 0 ${w} ${h}`);
             this.leaders.innerHTML = lines.join("");
+            this.leadersBack.setAttribute("viewBox", `0 0 ${w} ${h}`);
+            this.leadersBack.innerHTML = hiddenLines.join("");
         }
 
         start() {
