@@ -1105,8 +1105,8 @@
     z-index: -1;
     left: -0.08em;
     right: -0.08em;
-    top: 0.42em;
-    bottom: 0.02em;
+    top: 0.12em;             // a fat marker: most of the letter height
+    bottom: -0.04em;
     background: rgba($neon, 0.85);
     border-radius: 0.08em 0.18em 0.12em 0.2em;
     transform: scaleX(0) skewX(-6deg);
