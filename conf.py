@@ -64,6 +64,8 @@ revealjs_css_files = [
 revealjs_js_files = [
     'js/isolation.js',
     'js/scenes.js',
+    'js/fx.js',
+    'js/widgets.js',
     'js/camera.js',
     'js/robot-link.js',
     'js/demo.js',

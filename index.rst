@@ -211,6 +211,7 @@ Micropython en **microcontroladores**
     :data-background-color: #1F2A44
     :data-sheet: Micropython
     :data-transition: fade
+    :data-fx: circuit
 
 .. image:: images/micropython-logo.svg
    :width: 30%
@@ -228,6 +229,7 @@ Micropython en **microcontroladores**
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Micropython
+    :data-fx: circuit
 
 .. revealjs-fragments::
 
@@ -250,6 +252,7 @@ El cerebro: **ESP32-S3**
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Micropython
+    :data-fx: circuit
 
 .. revealjs-fragments::
 
@@ -516,6 +519,7 @@ Reto 1 de 5
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Reto 1: servos
+    :data-fx: protractor
 
 .. revealjs-fragments::
 
@@ -540,25 +544,29 @@ Servo de **modelismo** (PWM)
     :data-background-color: #E9EEF2
     :data-sheet: Reto 1: servos
 
-.. code-block:: python
+.. container:: wide-cols
 
-    from machine import Pin, PWM
+    .. code-block:: python
 
-    servo = PWM(Pin(5), freq=50)       # one pulse every 20 ms
+        from machine import Pin, PWM
 
-
-    def angle(degrees):
-        # 0.5 ms = 0°, 2.5 ms = 180°
-        pulse_ns = 500_000 + degrees * 2_000_000 // 180
-        servo.duty_ns(pulse_ns)
+        servo = PWM(Pin(5), freq=50)       # one pulse every 20 ms
 
 
-    angle(90)
+        def angle(degrees):
+            # 0.5 ms = 0°, 2.5 ms = 180°
+            pulse_ns = 500_000 + degrees * 2_000_000 // 180
+            servo.duty_ns(pulse_ns)
+
+
+        angle(90)
+
+    .. widget:: pwm
 
 .. revealjs-notes::
 
    Para que veáis la diferencia, así se controla un servo de modelismo, como los de muchos robots que se montan a
-   mano. Enviamos un pulso cada 20 milisegundos, y la duración del pulso indica el ángulo. Sencillo, pero el servo nunca
+   mano (mover el control de la derecha). Enviamos un pulso cada 20 milisegundos, y la duración del pulso indica el ángulo. Sencillo, pero el servo nunca
    nos dirá si ha llegado o si algo lo bloquea.
 
 
@@ -569,6 +577,7 @@ Servos de **Stack-chan**
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Reto 1: servos
+    :data-fx: protractor
 
 .. code-block:: python
 
@@ -693,6 +702,7 @@ Reto 2 de 5
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Reto 2: sensores
+    :data-fx: ripples
 
 .. revealjs-fragments::
 
@@ -790,6 +800,7 @@ Reto 3 de 5
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Reto 3: audio
+    :data-fx: wave
 
 .. revealjs-fragments::
 
@@ -800,7 +811,7 @@ Reto 3 de 5
 
 .. revealjs-notes::
 
-   El micrófono nos da 16000 números por segundo. Parece mucho para un microcontrolador, pero si grabamos en un
+   (Pulsar M: la onda del fondo escucha el micrófono de la sala.) El micrófono nos da 16000 números por segundo. Parece mucho para un microcontrolador, pero si grabamos en un
    array preasignado, Micropython no crea un objeto por muestra y va sobrado. El truco de rendimiento en
    Micropython casi siempre es el mismo: evitar crear objetos en los bucles.
 
@@ -829,6 +840,7 @@ Demo: **vúmetro**
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Reto 3: cámara
+    :data-fx: viewfinder
 
 .. revealjs-fragments::
 
@@ -904,6 +916,7 @@ Dos formas de **dibujar**
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Reto 4: pantalla
+    :data-fx: pixels
 
 .. container:: two-cols
 
@@ -1051,17 +1064,13 @@ Control **proporcional**
     error = face_x - 160          # how far from the centre?
     yaw -= error * 0.05           # correct a fraction of it
 
-.. revealjs-fragments::
-
-    * Si la ganancia es muy baja, el robot llega tarde.
-    * Si es muy alta, se pasa y oscila.
-    * Ajustarla en vivo, sin compilar, es donde Micropython brilla.
+.. widget:: pcontrol
 
 .. revealjs-notes::
 
-   Dos líneas. Si la ganancia, ese 0,05, es muy pequeña, el robot reacciona tarde. Si es muy grande, se pasa de
-   largo y oscila. Encontrar el valor es cuestión de probar, y probar en vivo es justo lo que Micropython nos
-   permite.
+   Dos líneas. Movamos la ganancia: si es muy pequeña, el robot llega tarde; si es muy grande, se pasa de largo
+   y oscila, porque la cámara siempre ve la cara con un fotograma de retraso. Encontrar el valor es cuestión de
+   probar, y probar en vivo es justo lo que Micropython nos permite.
 
 
 Demo: pregúntale a **Claude**
@@ -1089,6 +1098,7 @@ Los **límites**
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Reto 5: IA
+    :data-fx: neural
 
 .. revealjs-fragments::
 

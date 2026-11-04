@@ -121,6 +121,16 @@ class StackChanFace(Directive):
         return [nodes.raw('', FACE_HTML.format(size=size), format='html')]
 
 
+class Widget(Directive):
+    """Interactive explainer built by widgets.js (``pwm``, ``pcontrol``)."""
+    required_arguments = 1
+
+    def run(self):
+        name = directives.choice(self.arguments[0], ('pwm', 'pcontrol'))
+        return [nodes.raw('', f'<div class="widget widget-{name}" data-widget="{name}"></div>',
+                          format='html')]
+
+
 class CameraView(Directive):
     """Dock the live camera into the slide (``full`` or ``side``)."""
     option_spec = {
@@ -175,6 +185,7 @@ def setup(app):
     app.add_directive('stackchan-3d', StackChan3D)
     app.add_directive('stackchan-face', StackChanFace)
     app.add_directive('camera-view', CameraView)
+    app.add_directive('widget', Widget)
     return {
         'version': '2.0',
         'parallel_read_safe': True,

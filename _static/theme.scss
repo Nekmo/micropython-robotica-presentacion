@@ -760,3 +760,48 @@
         p:nth-child(2) { color: darken($neon, 8%); font-weight: 800; margin-bottom: 0.6em; }
     }
 }
+
+// ---------------------------------------------------------------- animated backgrounds (fx.js)
+
+.reveal .backgrounds canvas.fx {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+// ---------------------------------------------------------------- interactive widgets (widgets.js)
+
+.reveal .widget {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 20px;
+    font-size: 22px;
+    color: $ink;
+    background: rgba(#fff, 0.7);
+    border: 2px solid $ink;
+    border-radius: $radius-head;
+
+    .w-row { display: flex; align-items: center; gap: 14px; font-weight: 800; }
+    input[type="range"] { flex: 1; accent-color: $neon; }
+    output { min-width: 3.2em; font-family: $font-mono; text-align: right; }
+    canvas { width: 100%; display: block; }
+    .w-pulse { height: 110px; }
+    .w-horn { height: 160px; }
+    .w-plot { height: 170px; }
+    .w-code {
+        margin: 0;
+        padding: 10px 12px;
+        font: 16px/1.5 $font-mono;
+        color: $shell;
+        background: $ink;
+        border-radius: $radius-small;
+        box-shadow: none;
+        width: auto;
+    }
+    .w-verdict { margin: 0; font-weight: 800; color: darken($neon, 8%); max-width: none; }
+}
+.reveal .wide-cols { align-items: center; }
+.reveal .wide-cols pre.code-wrapper { font-size: 0.5em; }
