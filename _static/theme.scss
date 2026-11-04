@@ -1,0 +1,762 @@
+// Theme for "Usando Micropython de verdad: bienvenidos a la robótica"
+// Compile with: sassc _static/theme.scss _static/theme.css
+@import "tokens";
+
+// ---------------------------------------------------------------- base
+
+:root {
+    --r-background-color: #{$ink};
+    --r-main-font: #{$font-body};
+    --r-main-font-size: #{$size-base};
+    --r-main-color: #{$shell};
+    --r-heading-font: #{$font-display};
+    --r-heading-color: #{$shell};
+    --r-heading-text-transform: none;
+    --r-heading-font-weight: 400;
+    --r-heading-letter-spacing: 0;
+    --r-heading-line-height: 1.12;
+    --r-link-color: #{$led};
+    --r-link-color-hover: #{$neon};
+    --r-selection-background-color: #{$neon};
+    --r-code-font: #{$font-mono};
+}
+
+.reveal {
+    font-family: $font-body;
+    font-size: $size-base;
+    line-height: 1.45;
+    color: $shell;
+
+    .slides { text-align: left; }
+    .slides section { box-sizing: border-box; padding: 0 56px; }
+
+    h1, h2, h3, h4 {
+        font-family: $font-display;
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
+        text-shadow: none;
+        word-wrap: normal;
+        hyphens: none;
+        strong { font-weight: inherit; color: inherit; }
+    }
+    h1 { font-size: $size-h1; line-height: 1.02; margin-bottom: 0.3em; }
+    h2, h3 { font-size: $size-h2; margin-bottom: 0.6em; }
+
+    p { margin: 0 0 0.7em; max-width: 30em; }
+    strong { font-weight: 800; }
+    em { font-style: normal; color: $led; }
+
+    a { color: $led; text-decoration: none; border-bottom: 2px solid rgba($led, 0.4); }
+    a:hover { color: $neon; border-color: $neon; }
+
+    // Lists: each bullet is a servo horn (a small rotated square)
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: block;
+        li {
+            position: relative;
+            padding-left: 1.3em;
+            margin: 0.38em 0;
+            max-width: 30em;
+            &::before {
+                content: "";
+                position: absolute;
+                left: 0.2em;
+                top: 0.55em;
+                width: 0.38em;
+                height: 0.38em;
+                background: $neon;
+                border-radius: 2px;
+                transform: rotate(45deg);
+            }
+        }
+        ul { margin-top: 0.2em; font-size: 0.85em; li::before { background: $led; } }
+    }
+    ol { margin-left: 1.2em; li { margin: 0.38em 0; padding-left: 0.3em; } li::marker { font-family: $font-display; color: $neon; } }
+
+    // Tables: used as layout helpers, no borders
+    table {
+        margin: 0;
+        border: 0;
+        th, td { border: 0 !important; padding: 0.2em 0.6em; text-align: center; }
+    }
+
+    img { max-width: 100%; }
+
+    .align-center { display: block; margin-left: auto; margin-right: auto; text-align: center; }
+
+    // Inline code and code blocks
+    code, pre { font-family: $font-mono; }
+    code.literal, .docutils.literal {
+        font-size: 0.82em;
+        padding: 0.05em 0.3em;
+        border-radius: 6px;
+        background: rgba($led, 0.14);
+    }
+    pre.code-wrapper, pre.literal-block {
+        width: 100%;
+        box-sizing: border-box;     // padding inside the width: never past the frame
+        margin: 0.4em 0;
+        padding: 0.7em 0.9em;
+        font-size: 0.6em;
+        line-height: 1.45;
+        background: $ink;
+        color: $shell;
+        border-radius: $radius-small;
+        box-shadow: none;
+        overflow: auto;
+        code { padding: 0; max-height: none; background: transparent; color: inherit; font-size: 1em; line-height: inherit; }
+    }
+    pre.code-wrapper { font-size: 0.72em; }
+}
+
+// highlight.js tokens in the presentation palette
+.reveal .hljs {
+    .hljs-comment { color: #8C9BB8; font-style: italic; }
+    .hljs-keyword, .hljs-literal { color: $neon; }
+    .hljs-string { color: $amber; }
+    .hljs-number { color: $led; }
+    .hljs-title, .hljs-function { color: #9EE8EC; }
+    .hljs-built_in { color: #FFB3D1; }
+}
+
+// ---------------------------------------------------------------- scenes
+
+.reveal .backgrounds .scene { overflow: hidden; }
+
+// Sheet: a drawing printed on the robot's plastic
+.scene-sheet {
+    background-color: $shell !important;
+    background-image:
+        linear-gradient($grid-strong 1px, transparent 1px),
+        linear-gradient(90deg, $grid-strong 1px, transparent 1px),
+        linear-gradient($grid 1px, transparent 1px),
+        linear-gradient(90deg, $grid 1px, transparent 1px) !important;
+    background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px !important;
+    background-position: -1px -1px !important;
+    &::after {   // drawing frame
+        content: "";
+        position: absolute;
+        inset: 22px;
+        border: 2px solid rgba($ink, 0.55);
+        pointer-events: none;
+    }
+}
+
+// Blueprint: drawing ink with cyan construction lines
+.scene-blueprint {
+    background-color: $ink !important;
+    background-image:
+        linear-gradient($blue-grid-strong 1px, transparent 1px),
+        linear-gradient(90deg, $blue-grid-strong 1px, transparent 1px),
+        linear-gradient($blue-grid 1px, transparent 1px),
+        linear-gradient(90deg, $blue-grid 1px, transparent 1px) !important;
+    background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px !important;
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 22px;
+        border: 2px solid rgba($led, 0.35);
+        pointer-events: none;
+    }
+}
+
+// Face: the robot's LCD, with a faint pixel matrix
+.scene-face {
+    background-color: $screen !important;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1.4px) !important;
+    background-size: 6px 6px !important;
+}
+
+// Neon: the LEDs light up one after another (the deck's one orchestrated motion)
+.scene-neon {
+    background-color: $neon !important;
+    .led-strip {
+        position: absolute;
+        left: 50%;
+        display: flex;
+        gap: 34px;
+        transform: translateX(-50%);
+        &.top { top: 34px; }
+        &.bottom { bottom: 34px; }
+    }
+    .led {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba($ink, 0.25);
+        animation: led-run 2.4s steps(1) infinite;
+        animation-delay: calc(var(--i) * 0.4s);
+    }
+}
+
+@keyframes led-run {
+    0% { background: $shell; box-shadow: 0 0 16px 4px rgba(255, 255, 255, 0.8); }
+    17%, 100% { background: rgba($ink, 0.25); box-shadow: none; }
+}
+
+// Title block in the bottom-right corner of every drawing
+.title-block {
+    position: absolute;
+    right: 120px;
+    bottom: 22px;
+    display: grid;
+    grid-template-columns: auto auto auto;
+    font-family: $font-body;
+    font-size: 15px;
+    line-height: 1;
+    // Closed on three sides: the bottom edge sits on the drawing frame, the
+    // right one is drawn because the block stops short of the slide controls
+    border: 2px solid currentColor;
+    border-bottom: 0;
+    span { padding: 9px 14px; border-right: 1px solid currentColor; }
+    span:last-child { border-right: 0; }
+    .tb-label { font-weight: 800; }
+    .tb-number { font-family: $font-mono; }
+}
+.scene-sheet .title-block { color: rgba($ink, 0.7); }
+.scene-blueprint .title-block { color: rgba($led, 0.6); }
+
+.reg-mark {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 0 solid currentColor;
+    &.tl { top: 10px; left: 10px; border-top-width: 2px; border-left-width: 2px; }
+    &.tr { top: 10px; right: 10px; border-top-width: 2px; border-right-width: 2px; }
+    &.bl { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; }
+    &.br { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; }
+}
+.scene-sheet .reg-mark { color: rgba($ink, 0.5); }
+.scene-blueprint .reg-mark { color: rgba($led, 0.5); }
+
+// Slide content colours per scene
+.reveal .slides section.on-sheet {
+    color: $ink;
+    h1, h2, h3 { color: $ink; }
+    a { color: darken($led, 22%); border-color: rgba($led, 0.6); }
+    em { color: darken($neon, 8%); }
+    code.literal { background: rgba($ink, 0.08); }
+}
+.reveal .slides section.on-neon {
+    color: $ink;
+    h1, h2, h3 { color: $ink; }
+    a { color: $ink; border-color: rgba($ink, 0.4); }
+    ul li::before { background: $ink; }
+    em { color: $shell; }
+}
+.reveal .slides section.on-face {
+    text-align: center;
+    h1, h2 { color: $shell; }
+    p { margin-left: auto; margin-right: auto; }
+}
+
+// Dimension line under a heading: shows the scale of a challenge
+.reveal .slides section .dimension {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    color: $led;
+    font-family: $font-mono;
+    font-size: 0.55em;
+    &::before, &::after { content: ""; flex: 1; height: 2px; background: currentColor; }
+}
+
+// ---------------------------------------------------------------- Stack-chan face
+
+.sc-face {
+    --look-x: 0;
+    --look-y: 0;
+    position: relative;
+    width: 520px;
+    height: 250px;
+    margin: 0 auto 30px;
+
+    .sc-eye {
+        position: absolute;
+        top: 70px;
+        width: 74px;
+        height: 74px;
+        border-radius: 50%;
+        background: #fff;
+        transform: translate(calc(var(--look-x) * 30px), calc(var(--look-y) * 16px));
+        transition: transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+        &.left { left: 90px; }
+        &.right { right: 90px; }
+    }
+    .sc-lid { display: none; }
+
+    .sc-mouth {
+        position: absolute;
+        left: 50%;
+        top: 196px;
+        width: 150px;
+        height: 16px;
+        margin-left: -75px;
+        background: #fff;
+        transform: translateX(calc(var(--look-x) * 14px));
+        transition: transform 0.25s ease-out;
+    }
+
+    &.blink .sc-eye { height: 12px; top: 101px; border-radius: 6px; }
+
+    &.talk .sc-mouth { animation: talk 0.9s ease-in-out; }
+
+    &.small {
+        width: 260px;
+        height: 125px;
+        .sc-eye { top: 35px; width: 37px; height: 37px; &.left { left: 45px; } &.right { right: 45px; } }
+        .sc-mouth { top: 98px; width: 75px; height: 8px; margin-left: -37px; }
+        &.blink .sc-eye { height: 6px; top: 50px; }
+    }
+}
+
+@keyframes talk {
+    0%, 100% { height: 16px; border-radius: 0; }
+    20% { height: 46px; border-radius: 0 0 40px 40px; }
+    40% { height: 20px; }
+    60% { height: 38px; border-radius: 0 0 40px 40px; }
+    80% { height: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sc-face .sc-eye, .sc-face .sc-mouth { transition: none; }
+    .sc-face.talk .sc-mouth { animation: none; }
+    .scene-neon .led { animation: none; }
+}
+
+// Title slide lockup: "Usando Micropython de verdad" / subtitle
+.reveal .slides section .kicker {
+    font-family: $font-body;
+    font-weight: 800;
+    font-size: 0.75em;
+    color: $led;
+    margin: 0 auto 0.4em;
+}
+
+// ---------------------------------------------------------------- layout helpers
+
+.reveal .two-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+}
+
+.reveal .wide-cols {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
+// Timeline of past talks (a real sequence, so it is numbered by year)
+.reveal .timeline ul {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    margin-top: 1em;
+    li {
+        max-width: none;
+        padding: 64px 0 0;
+        margin: 0;
+        border-top: 3px solid $ink;
+        &::before {
+            top: -12px;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            transform: none;
+            background: $ink;
+        }
+        &:last-child::before { background: $neon; box-shadow: 0 0 0 6px rgba($neon, 0.25); }
+        strong { display: block; font-family: $font-display; font-weight: 400; font-size: 1.15em; }
+    }
+}
+
+// Spec sheet: label/value pairs of a component
+.reveal dl.spec, .reveal .spec dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25em 1em;
+    font-size: 0.85em;
+    dt { font-weight: 800; }
+    dd { margin: 0; }
+}
+
+// Robot comparison cards for "other robots"
+.reveal .robots ul {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    li {
+        max-width: none;
+        margin: 0;
+        padding: 22px 24px;
+        border: 2px solid currentColor;
+        border-radius: $radius-head;
+        font-size: 0.8em;
+        &::before { display: none; }
+        strong { display: block; font-family: $font-display; font-weight: 400; font-size: 1.3em; margin-bottom: 0.3em; }
+    }
+    li:first-child { background: $ink; color: $shell; border-color: $ink; }
+}
+
+.reveal .big-question {
+    font-family: $font-display;
+    font-size: 1.9em;
+    line-height: 1.1;
+    max-width: 16em;
+    margin: 0 auto;
+    text-align: center;
+}
+
+// ---------------------------------------------------------------- live demo editor
+
+.reveal .micropython-demo {
+    // Editor, toolbar and terminal always span the whole content width
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    font-size: 18px;
+    text-align: left;
+
+    .demo-toolbar {
+        display: flex;
+        flex-wrap: wrap;            // wrap instead of overflowing the editor
+        align-items: center;
+        box-sizing: border-box;
+        width: 100%;
+        gap: 8px;
+        padding: 8px 10px;
+        background: $screen;
+        border-radius: $radius-small $radius-small 0 0;
+        color: $shell;
+    }
+    .demo-name { font-family: $font-mono; font-size: 15px; opacity: 0.7; margin-right: 6px; }
+    .spacer { flex: 1; }
+    button, select {
+        font: 700 15px $font-body;
+        color: $ink;
+        background: $shell;
+        border: 0;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        &:hover:not(:disabled) { background: #fff; }
+        &:focus-visible { outline: 3px solid $led; outline-offset: 2px; }
+        &:disabled { opacity: 0.35; cursor: default; }
+    }
+    .send { background: $neon; color: $ink; }
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #6b6f78;
+        &.on { background: $led; box-shadow: 0 0 10px $led; }
+    }
+
+    .demo-body {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+        background: $ink;
+        border-radius: 0 0 $radius-small $radius-small;
+        overflow: hidden;
+    }
+    .editor { flex: 1 1 78%; min-height: 80px; width: 100%; min-width: 0; }
+    .resizer { flex: 0 0 8px; background: $screen; cursor: row-resize; }
+    .terminal {
+        flex: 0 0 22%;
+        margin: 0;
+        padding: 10px 14px;
+        overflow: auto;
+        background: $screen;
+        color: $led;
+        font: 17px/1.4 $font-mono;
+        white-space: pre-wrap;
+        box-shadow: none;
+        width: auto;
+    }
+}
+
+// Leave room for the floating camera on demo slides
+.reveal .slides section .micropython-demo { margin-right: 0; }
+
+// ---------------------------------------------------------------- camera box
+
+#camera-box {
+    --zoom: 1;
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 30;
+    width: 30vw;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: $screen;
+    border: 4px solid $shell;
+    border-radius: $radius-head;
+    cursor: move;
+    touch-action: none;
+
+    &.hidden { display: none; }
+
+    > video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(var(--zoom));
+    }
+    &.mirror .cam-live { transform: scale(var(--zoom)) scaleX(-1); }
+    .cam-sim {
+        position: absolute;
+        inset: 0;
+        flex-direction: column;
+        background: $screen;
+        cursor: default;
+        .stackchan-3d.mini {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            background: radial-gradient(circle at 50% 40%, #2b3a5c, $ink 70%);
+            .sc3d-controls { left: 10px; right: auto; top: 8px; width: auto; }
+            .sc3d-controls { display: none; }
+        }
+    }
+    .sim-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 10px;
+        align-items: center;
+        padding: 8px 10px;
+        background: rgba($ink, 0.95);
+        color: $shell;
+        font: 13px $font-body;
+        button {
+            font: 700 13px $font-body;
+            padding: 4px 8px;
+            border: 0;
+            border-radius: 5px;
+            background: $shell;
+            color: $ink;
+            cursor: pointer;
+            &[aria-pressed="true"] { background: $neon; }
+        }
+        input[type="range"] { width: 80px; accent-color: $neon; }
+        .sim-group { display: inline-flex; gap: 4px; align-items: center; }
+    }
+
+    // Only the selected source is visible
+    .cam-live, .cam-sim, .cam-empty { display: none; }
+    &[data-source="camera"].has-stream .cam-live { display: block; }
+    &[data-source="camera"]:not(.has-stream) .cam-empty { display: flex; }
+    &[data-source="simulator"] .cam-sim { display: flex; }
+
+    .cam-empty {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        align-items: center;
+        justify-content: center;
+        padding: 1em;
+        text-align: center;
+        color: rgba($shell, 0.7);
+        font: 16px $font-body;
+    }
+
+    .cam-badge {
+        position: absolute;
+        left: 12px;
+        top: 10px;
+        padding: 3px 9px;
+        border-radius: 5px;
+        font: 700 13px $font-body;
+        color: $ink;
+        background: $shell;
+    }
+
+    // Docked inside a slide
+    &.docked {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        cursor: default;
+    }
+    &.dock-full { width: auto; height: 540px; margin: 0 auto; }
+    &.dock-side { width: 100%; }
+
+    &.full-screen {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+        z-index: 100;
+    }
+}
+
+.reveal .camera-slot { width: 100%; }
+
+#camera-controls {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    z-index: 31;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    font: 14px $font-body;
+    color: $shell;
+    &.hidden { display: none; }
+    button, select {
+        font: 700 14px $font-body;
+        padding: 5px 10px;
+        border: 0;
+        border-radius: 6px;
+        background: $shell;
+        color: $ink;
+        cursor: pointer;
+    }
+    .cam-panel {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba($screen, 0.85);
+    }
+    &.collapsed .cam-panel { display: none; }
+    .cam-toggle-panel { opacity: 0.6; &:hover { opacity: 1; } }
+}
+
+// ---------------------------------------------------------------- 3D model
+
+.stackchan-3d {
+    position: relative;
+    width: 100%;
+    canvas { display: block; width: 100% !important; height: 100% !important; cursor: grab; }
+    canvas:active { cursor: grabbing; }
+
+    .sc3d-labels { position: absolute; inset: 0; pointer-events: none; }
+    .sc3d-leaders {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        line { stroke: $neon; stroke-width: 2; }
+        circle { fill: $neon; }
+    }
+    .sc3d-label {
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 1;
+        padding: 3px 10px;
+        translate: 0 -50%;
+        font: 700 19px $font-body;
+        white-space: nowrap;
+        color: currentColor;
+        background: rgba($shell, 0.9);
+        border: 2px solid $neon;
+        border-radius: 6px;
+        &.left { translate: -100% -50%; }
+        &.occluded { opacity: 0.45; border-style: dashed; }   // part hidden behind the robot
+    }
+
+    .sc3d-controls {
+        position: absolute;
+        right: 0;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 44%;
+        font-size: 22px;
+        label { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        input[type="range"] { width: 60%; accent-color: $neon; }
+        .sc3d-code {
+            margin: 10px 0 0;
+            padding: 14px;
+            font: 17px/1.5 $font-mono;
+            background: $ink;
+            color: $shell;
+            border-radius: $radius-small;
+            white-space: pre;
+            box-shadow: none;
+            width: auto;
+        }
+        .sc3d-status { font: 18px $font-mono; color: $led; }
+        .sc3d-run {
+            align-self: flex-end;
+            font: 700 18px $font-body;
+            padding: 8px 16px;
+            border: 0;
+            border-radius: 8px;
+            background: $neon;
+            color: $ink;
+            cursor: pointer;
+        }
+    }
+    &[data-mode="servos"] canvas { width: 54% !important; }
+}
+
+// ---------------------------------------------------------------- reveal chrome
+
+.reveal .progress { color: $neon; height: 4px; }
+.reveal .controls { color: $neon; }
+.reveal .slide-number { background: transparent; font-family: $font-mono; }
+
+:focus-visible { outline: 3px solid $led; outline-offset: 2px; }
+
+.reveal img.qr { background: #fff; padding: 18px; border-radius: $radius-head; }
+
+.reveal .slides section:has(> .big-question) > :is(h1, h2, h3) { display: none; }
+.reveal .slides section.on-neon > :is(h1, h2, h3) { font-size: 112px; line-height: 1; margin-bottom: 0.25em; }
+.reveal .slides section.on-neon > p { font-size: 1.3em; font-weight: 800; }
+.reveal .slides section.on-face.present {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    > .sc-face { order: -1; }
+}
+.reveal .slides section .kicker { font-size: 1.1em; }
+.reveal .slides section .centered { text-align: center; }
+
+// Demo slides: compact heading so the editor gets the room
+.reveal .slides section:has(.micropython-demo) > :is(h1, h2, h3) { font-size: 46px; margin-bottom: 0.35em; }
+#camera-box:not(.docked) { width: 28vw; }
+
+// Slides built around one centred element (logo, QR, photo, live camera):
+// centre the heading too, so the composition does not lean to the left
+.reveal .slides section:has(> img.align-center, > a > img.align-center, > .centered, > .camera-slot, > .about) > :is(h1, h2, h3) {
+    text-align: center;
+}
+.reveal .camera-slot { display: flex; justify-content: center; }
+
+// About me: portrait and a short card, side by side, centred on the sheet
+.reveal .about {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 64px;
+    img { flex: none; }
+    .about-text {
+        p { margin: 0; }
+        p:first-child strong { font-family: $font-display; font-weight: 400; font-size: 1.8em; }
+        p:nth-child(2) { color: darken($neon, 8%); font-weight: 800; margin-bottom: 0.6em; }
+    }
+}

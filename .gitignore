@@ -1,0 +1,9 @@
+_build/
+__pycache__/
+*.pyc
+.idea/
+_static/theme.css
+demos/**/secrets.py
+.playwright-mcp/
+_static/sim/bundle.json
+_static/js/model-version.js

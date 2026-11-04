@@ -1,0 +1,105 @@
+{
+  "id": "stackchan-2026",
+  "name": "M5Stack Stack-chan (2026)",
+  "board_id": 27,
+  "board_const": "M5StackChan",
+  "firmware": "UIFlow v2.4.5 (MicroPython)",
+  "micropython": {
+    "heapsize": "8m",
+    "note": "gc heap del runtime micropython (ESP32-S3 con PSRAM)"
+  },
+  "screen": {
+    "width": 240,
+    "height": 320,
+    "default_rotation": 0,
+    "note": "320x240 landscape with Widgets.setRotation(1)"
+  },
+  "buttons": [
+    "A",
+    "B",
+    "C",
+    "PWR"
+  ],
+  "touch": true,
+  "components": [
+    {
+      "type": "servo",
+      "name": "Servo X (pan)",
+      "id": 1,
+      "bus": "UART1",
+      "pins": {
+        "tx": 6,
+        "rx": 7
+      },
+      "range": [
+        0,
+        360
+      ],
+      "center": 180,
+      "zero_pos": 450
+    },
+    {
+      "type": "servo",
+      "name": "Servo Y (tilt)",
+      "id": 2,
+      "bus": "UART1",
+      "pins": {
+        "tx": 6,
+        "rx": 7
+      },
+      "range": [
+        0,
+        90
+      ],
+      "center": 45,
+      "zero_pos": 125
+    },
+    {
+      "type": "rgb_led",
+      "name": "RGB LEDs (2 strips x 6)",
+      "count": 12,
+      "bus": "I2C1 (io-expander M5IOE1 @0x6F, io 14)",
+      "pins": {
+        "scl": 11,
+        "sda": 12
+      }
+    },
+    {
+      "type": "touch_sensor",
+      "name": "Si12T capacitive touch (head, 3 zones)",
+      "bus": "I2C1",
+      "pins": {
+        "scl": 11,
+        "sda": 12
+      }
+    },
+    {
+      "type": "imu",
+      "name": "IMU BMI270",
+      "bus": "I2C internal"
+    },
+    {
+      "type": "als",
+      "name": "LTR-553ALS ambient light + proximity",
+      "bus": "I2C internal"
+    },
+    {
+      "type": "power_monitor",
+      "name": "INA226 battery monitor",
+      "bus": "I2C1 @0x41"
+    },
+    {
+      "type": "nfc",
+      "name": "NFC unit",
+      "bus": "I2C1"
+    },
+    {
+      "type": "speaker",
+      "name": "Speaker (I2S)"
+    },
+    {
+      "type": "mic",
+      "name": "Microphone (I2S)"
+    }
+  ]
+}
