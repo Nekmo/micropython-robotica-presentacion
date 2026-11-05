@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+
+<html lang="es" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Usando Micropython de verdad</title>
+    <link rel="stylesheet" type="text/css" href="_static/revealjs/dist/reveal.css?v=d4488b42" />
+    <link rel="stylesheet" href="_static/revealjs/dist/theme/black.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/vendor/fonts/fonts.css?v=7f4b0efd" />
+    <link rel="stylesheet" type="text/css" href="_static/theme.css?v=8f1c7ba8" />
+    <script src="_static/js/isolation.js?v=fbadf8fd"></script>
+    <script src="_static/js/scenes.js?v=a1f9a615"></script>
+    <script src="_static/js/fx.js?v=799117fe"></script>
+    <script src="_static/js/intro.js?v=f4495ba0"></script>
+    <script src="_static/js/widgets.js?v=aa17a4c7"></script>
+    <script src="_static/js/screens.js?v=2630a0a1"></script>
+    <script src="_static/js/fragment-images.js?v=f722e3df"></script>
+    <script src="_static/js/camera.js?v=01f7cf9e"></script>
+    <script src="_static/js/robot-link.js?v=45456b68"></script>
+    <script src="_static/js/demo.js?v=4dc066c2"></script>
+    <script src="_static/js/model-version.js?v=70cd2155"></script>
+    <script src="_static/js/stackchan3d.js?v=4ba112f0"></script>
+    <link rel="icon" href="_static/favicon.svg"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  </head><body>
+    <div class="reveal">
+        <div class="slides" role="main">
+            <section >
+<section data-scene="boot" data-background-color="#000000" data-transition="fade" data-transition-speed="slow" id="intro">
+<h1>Usando Micropython de verdad</h1>
+
+<div class="sc-intro">
+  <div class="intro-robot" role="button" tabindex="0" aria-label="Saludar a Stack-chan">
+    <div class="intro-head">
+      <div class="intro-screen">
+        <pre class="intro-repl"></pre>
+        <div class="sc-face screen" data-emotion="neutral">
+  <div class="sc-cheek left"></div><div class="sc-cheek right"></div>
+  <div class="sc-eye left"><div class="sc-lid"></div></div>
+  <div class="sc-eye right"><div class="sc-lid"></div></div>
+  <div class="sc-mouth"></div>
+</div>
+        <div class="intro-flash"></div>
+      </div>
+      <div class="intro-camera"></div>
+    </div>
+    <div class="intro-base"></div>
+    <div class="intro-heart" aria-hidden="true">&#9829;</div>
+  </div>
+  <div class="intro-title">
+    <p class="intro-kicker">PyConES 2026</p>
+    <p class="intro-heading"><span>Usando</span> <span>Micropython</span>
+      <span class="intro-truth"><span class="intro-marker" aria-hidden="true"></span>de verdad<span
+        class="intro-truth-glow" aria-hidden="true">de verdad</span></span></p>
+    <p class="intro-sub">Bienvenidos a la robótica</p>
+  </div>
+</div>
+<aside class="notes">(Esperar a que arranque la animación: el robot se enciende, escribe en su consola de Micropython y despierta.)
+Hola a todos, muchas gracias por venir. Este de aquí es Stack-chan, y durante esta charla va a ser nuestro
+conejillo de indias. Podéis hacerle clic: se pone contento.</aside></section>
+</section>
+<section >
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Hola mundo" id="hola-pycones">
+<h2>¡Hola, <strong>PyConES</strong>!</h2>
+
+<div class="micropython-demo" data-demo="demo0_hola" data-steps="2-4|6-10|12-13|14-15">
+  <pre class="demo-source" style="display: none"># Hello Stack-chan: screen, LEDs and a beep
+import M5
+from M5 import Widgets
+from hardware.stackchan import StackChan
+
+M5.begin()
+Widgets.setRotation(1)
+Widgets.fillScreen(0x000000)
+Widgets.Label(&quot;Hola PyConES!&quot;, 70, 105, 1.0, 0xFFFFFF, 0x000000,
+              Widgets.FONTS.DejaVu24)
+
+robot = StackChan(i2c=1, uart=1)
+robot.set_rgb_color(0xFF4F9A)   # all 12 LEDs
+M5.Speaker.tone(880, 150)
+print(&quot;Hello from&quot;, M5.getBoard())</pre>
+  <span class="fragment code-step" data-step="0"></span><span class="fragment code-step" data-step="1"></span><span class="fragment code-step" data-step="2"></span><span class="fragment code-step" data-step="3"></span>
+  <div class="demo-toolbar">
+    <span class="demo-name">demo0_hola</span>
+    <span class="status-indicator" title="Desconectado"></span>
+    <select class="demo-target" aria-label="Destino">
+      <option value="serial">Robot (USB)</option>
+      <option value="simulator">Simulador</option>
+    </select>
+    <button class="connect">Conectar</button>
+    <button class="send" disabled>Ejecutar</button>
+    <button class="stop" disabled>Parar</button>
+    <button class="restart" disabled>Reiniciar</button>
+    <span class="spacer"></span>
+    <button class="font-down" aria-label="Reducir fuente">A-</button>
+    <button class="font-up" aria-label="Aumentar fuente">A+</button>
+    <button class="toggle-video" aria-label="Alternar cámara y simulador">Cámara</button>
+  </div>
+  <div class="demo-body" style="height: 560px">
+    <div class="editor"></div>
+    <div class="resizer"></div>
+    <pre class="terminal"></pre>
+  </div>
+</div>
+<aside class="notes">Antes de empezar, vamos a comprobar que todo funciona. Conecto el robot por USB, pulso en conectar, y en
+ejecutar. Este código se está enviando ahora mismo desde la presentación al robot. Si todo va bien, debería
+saludaros, encender sus LEDs y pitar. (Ejecutar). ¡Perfecto! Tenemos robot.</aside></section>
+</section>
+<section >
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Sobre mí" data-transition="fade" id="sobre-mi-nekmo">
+<h2>Sobre mí, <strong>Nekmo</strong></h2>
+<div class="about docutils container">
+<a class="reference internal image-reference" href="_images/cara.svg"><img alt="_images/cara.svg" src="_images/cara.svg" style="width: 300px;" />
+</a>
+<div class="about-text docutils container">
+<p><strong>Juan José</strong></p>
+<p>Nekmo en redes</p>
+<ul class="simple">
+<li class="fragment"><p>Programador Python en Plytix.</p></li>
+<li class="fragment"><p>Comunidad Python Málaga.</p></li>
+<li class="fragment"><p>Charlas y talleres sobre Micropython.</p></li>
+</ul>
+</div>
+</div>
+<div class="fragment-images docutils container">
+<img alt="_images/python-logo.png" src="_images/python-logo.png" />
+<img alt="_images/python-malaga-logo.png" src="_images/python-malaga-logo.png" />
+<img alt="_images/micropython-logo.svg" class="ink" src="_images/micropython-logo.svg" />
+</div>
+<aside class="notes">Dejadme presentarme. Soy Juan José, aunque muchos me conocéis en redes como Nekmo. Soy programador Python, y
+puede que me conozcáis por charlas anteriores tanto aquí, en PyConES, como en Python Málaga.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Sobre mí" id="el-ano-de-los-microcontroladores">
+<h3>2025, el año de los microcontroladores</h3>
+<div class="timeline docutils container">
+<ul class="simple">
+<li class="fragment"><p><strong>OpenSouthCode 2025</strong> Charla en Málaga: <strong>primeros pasos</strong> con Micropython.</p></li>
+<li class="fragment"><p><strong>PyConES 2025</strong> Taller en Sevilla: los asistentes <strong>programaron sus propios ESP32</strong> desde la
+presentación.</p></li>
+<li class="fragment"><p><strong>PyConES 2026</strong> Hoy: Micropython de verdad, en <strong>un robot de verdad</strong>.</p></li>
+</ul>
+</div>
+<div class="fragment-map docutils container">
+<svg class="map-iberia" viewBox="0 0 1000 915" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- Generated from Natural Earth 1:50m admin-0 countries (public domain).
+       North Africa runs past the bottom: the screen edge cuts it. -->
+  <defs><clipPath id="map-clip"><rect width="1000" height="915"/></clipPath></defs>
+  <g clip-path="url(#map-clip)">
+  <path class="map-land map-other" d="M527.4 740.0 L529.3 746.2 L533.0 751.1 L546.4 762.3 L554.4 769.3 L554.6 771.7 L552.1 777.4 L551.0 781.3 L553.1 785.5 L558.0 790.6 L558.4 793.0 L557.2 795.8 L554.7 801.2 L560.1 817.2 L561.0 832.6 L559.6 843.6 L559.6 850.0 L560.3 855.4 L564.9 867.9 L561.8 888.5 L565.3 899.7 L570.0 908.9 L572.6 925.2 L576.4 932.9 L582.7 939.7 L586.2 942.0 L593.1 947.6 L598.0 952.2 L600.9 959.2 L594.7 965.0 L589.8 970.1 L588.4 975.6 L590.7 984.5 L590.7 989.3 L587.6 990.8 L574.7 990.3 L564.6 989.9 L553.1 989.5 L536.8 988.6 L526.7 988.1 L512.8 987.4 L508.1 987.7 L495.4 990.2 L486.4 992.0 L484.9 992.5 L482.1 994.6 L480.2 1001.2 L478.5 1008.6 L476.6 1012.0 L449.7 1022.8 L439.2 1024.2 L433.1 1023.1 L428.8 1024.0 L425.0 1026.3 L423.8 1029.8 L423.6 1034.2 L424.4 1038.7 L427.0 1045.0 L427.4 1051.3 L425.8 1055.7 L425.4 1060.1 L424.6 1064.9 L426.0 1067.5 L428.6 1067.9 L431.2 1070.1 L434.9 1072.1 L437.9 1075.9 L437.8 1081.3 L435.2 1084.4 L433.0 1086.0 L422.9 1087.4 L414.9 1088.6 L404.5 1097.2 L393.4 1106.4 L380.3 1112.5 L374.5 1114.2 L364.4 1118.6 L352.3 1125.8 L346.4 1137.4 L338.8 1150.7 L331.6 1159.7 L321.7 1168.1 L312.5 1171.4 L301.0 1175.4 L286.4 1178.6 L276.0 1179.6 L272.9 1180.3 L263.8 1180.5 L259.4 1179.8 L256.1 1179.5 L254.7 1180.4 L254.3 1182.5 L254.1 1187.3 L253.5 1192.8 L250.6 1197.5 L248.6 1199.6 L246.2 1200.4 L238.5 1199.2 L232.1 1197.7 L216.9 1195.7 L213.9 1196.2 L212.7 1196.8 L208.0 1199.9 L200.7 1206.6 L195.7 1212.4 L192.0 1215.1 L183.1 1216.5 L179.3 1218.7 L162.8 1233.2 L159.3 1236.7 L142.3 1249.3 L137.5 1253.5 L133.8 1257.7 L123.7 1267.0 L117.2 1271.1 L116.0 1273.6 L115.7 1279.3 L115.7 1291.9 L115.7 1304.0 L115.7 1321.6 L115.7 1339.2 L115.7 1359.5 L107.1 1359.5 L107.1 1359.5 L107.4 1363.0 L109.3 1369.9 L109.9 1375.8 L109.0 1379.4 L108.1 1384.1 L108.5 1388.5 L109.9 1393.2 L111.2 1398.2 L111.2 1401.5 L108.6 1404.1 L102.6 1405.4 L95.4 1406.6 L90.2 1406.6 L82.3 1405.8 L77.4 1405.9 L73.1 1405.9 L69.2 1406.7 L64.5 1409.9 L59.2 1414.9 L52.7 1421.5 L48.7 1425.7 L43.4 1426.6 L38.2 1426.6 L33.1 1423.2 L29.8 1421.5 L27.6 1421.7 L24.0 1424.0 L19.8 1425.7 L15.8 1425.7 L9.2 1422.3 L1.3 1417.4 L-3.3 1414.9 L-9.8 1414.0 L-16.4 1412.4 L-21.0 1413.2 L-26.9 1413.2 L-34.8 1416.6 L-41.4 1419.0 L-48.6 1421.5 L-56.9 1423.8 L-54.9 1431.3 L-52.0 1435.3 L-52.0 1440.4 L-53.4 1444.6 L-57.3 1448.7 L-61.8 1454.0 L-64.4 1458.2 L-67.1 1463.9 L-69.0 1467.2 L-72.4 1472.7 L-75.4 1479.5 L-76.4 1483.7 L-77.6 1488.6 L-79.9 1490.1 L-88.0 1491.4 L-93.1 1493.1 L-97.5 1494.7 L-99.2 1497.6 L-99.4 1498.0 L-100.7 1503.9 L-100.7 1508.0 L-102.0 1511.4 L-103.9 1519.6 L-106.4 1527.2 L-108.4 1537.2 L-110.3 1545.5 L-112.8 1558.8 L-115.3 1571.2 L-118.5 1582.9 L-121.1 1590.4 L-123.0 1594.5 L-127.5 1599.6 L-131.3 1602.8 L-135.7 1607.1 L-140.8 1611.2 L-147.8 1616.1 L-153.6 1620.4 L-155.9 1622.3 L-158.7 1624.5 L-163.1 1630.3 L-166.9 1638.6 L-169.5 1645.3 L-173.9 1656.1 L-177.1 1662.0 L-179.0 1665.2 L-184.1 1668.5 L-189.9 1671.1 L-196.2 1674.4 L-201.3 1677.7 L-208.3 1681.1 L-212.8 1684.4 L-216.0 1689.3 L-218.5 1695.2 L-221.7 1703.6 L-224.3 1712.7 L-225.5 1718.5 L-229.4 1738.5 L-230.6 1750.1 L-231.9 1757.6 L-233.8 1766.8 L-235.1 1780.9 L-235.1 1792.5 L-236.4 1799.2 L-237.0 1804.2 L-240.2 1810.0 L-242.7 1814.1 L-247.2 1820.0 L-251.0 1823.3 L-252.3 1826.6 L-256.1 1830.8 L-259.9 1837.4 L-263.1 1841.6 L-262.5 1844.9 L-261.8 1850.7 L-263.8 1856.6 L-265.7 1863.3 L-270.8 1871.5 L-276.5 1875.7 L-284.8 1876.5 L-296.2 1876.5 L-305.2 1875.7 L-316.0 1875.7 L-325.5 1874.1 L-334.5 1872.4 L-345.3 1871.5 L-352.9 1871.5 L-362.5 1873.2 L-387.3 1873.2 L-396.9 1874.1 L-410.9 1877.4 L-414.2 1878.2 L-414.2 1878.2 L-409.6 1838.3 L-400.8 1816.7 L-393.9 1807.2 L-383.1 1802.3 L-373.2 1780.5 L-369.7 1760.6 L-363.2 1751.4 L-361.1 1744.2 L-363.7 1738.7 L-357.6 1727.9 L-350.1 1711.4 L-346.7 1700.8 L-338.0 1684.5 L-336.9 1680.9 L-337.7 1676.8 L-341.1 1680.2 L-344.7 1686.3 L-349.1 1691.1 L-347.3 1685.2 L-343.9 1676.6 L-336.2 1667.6 L-324.0 1657.6 L-298.6 1623.8 L-289.1 1618.0 L-280.5 1603.8 L-277.5 1591.1 L-276.6 1562.1 L-273.6 1546.8 L-268.0 1534.9 L-261.3 1513.2 L-256.2 1503.5 L-252.9 1483.7 L-249.3 1476.2 L-242.8 1472.6 L-233.7 1462.7 L-219.9 1456.6 L-203.6 1443.8 L-195.9 1436.1 L-190.8 1424.7 L-185.3 1401.9 L-175.6 1377.9 L-170.5 1359.9 L-170.4 1359.5 L-161.8 1350.1 L-156.0 1338.0 L-146.1 1332.7 L-125.4 1330.1 L-94.7 1320.2 L-67.1 1305.1 L-59.2 1299.1 L-50.9 1287.1 L-37.0 1271.5 L-11.1 1252.8 L0.9 1242.3 L19.1 1216.1 L31.2 1194.4 L41.2 1180.4 L48.2 1168.0 L53.1 1155.5 L55.8 1135.2 L54.0 1127.3 L46.3 1114.4 L41.2 1110.9 L39.8 1104.8 L42.5 1094.1 L42.5 1075.6 L44.0 1046.0 L52.6 1022.2 L73.4 991.0 L77.3 978.2 L79.7 957.8 L79.9 950.6 L106.0 921.6 L121.3 899.4 L126.6 894.0 L140.1 883.9 L187.1 861.7 L213.7 845.9 L229.2 834.4 L238.5 820.8 L264.1 767.3 L289.3 692.0 L291.4 683.3 L302.7 680.8 L310.6 679.7 L317.1 676.9 L325.0 671.3 L332.6 673.5 L328.8 677.4 L328.8 686.6 L334.2 697.5 L343.6 709.7 L360.7 725.2 L374.0 731.5 L393.0 735.2 L415.1 728.4 L427.5 728.3 L433.6 725.3 L440.1 729.6 L452.6 731.0 L464.6 728.7 L473.7 722.2 L479.5 714.8 L480.4 718.4 L480.7 722.4 L482.4 724.8 L486.0 734.3 L487.9 738.0 L494.8 737.4 L500.8 739.3 L514.4 738.4 L527.4 740.0Z M1215.1 587.5 L1216.4 591.9 L1216.6 596.1 L1210.6 599.9 L1206.6 602.2 L1201.9 612.8 L1193.0 620.1 L1191.6 622.3 L1191.6 624.3 L1197.6 627.6 L1199.6 630.7 L1200.6 634.8 L1197.9 649.8 L1196.2 661.2 L1194.0 676.2 L1194.1 681.9 L1196.4 688.8 L1198.6 694.2 L1199.3 700.2 L1198.5 715.1 L1201.3 723.7 L1203.5 731.7 L1198.2 741.6 L1196.0 750.3 L1194.6 762.9 L1194.0 770.8 L1190.6 778.1 L1186.2 784.9 L1181.2 789.2 L1175.1 792.8 L1168.0 797.7 L1162.3 810.6 L1150.0 821.4 L1147.4 825.1 L1146.2 833.8 L1146.5 845.8 L1148.7 855.3 L1154.6 869.4 L1159.8 884.9 L1161.2 892.7 L1163.2 895.6 L1170.5 900.7 L1183.2 907.6 L1185.5 910.4 L1191.8 921.1 L1197.7 940.3 L1199.6 953.0 L1211.2 963.1 L1221.8 972.4 L1232.1 980.5 L1243.2 989.4 L1244.8 992.2 L1248.6 1011.0 L1252.2 1029.7 L1256.3 1050.3 L1260.4 1070.9 L1265.2 1095.3 L1267.9 1109.1 L1271.2 1125.8 L1275.1 1145.5 L1268.9 1149.6 L1261.8 1155.0 L1266.9 1165.1 L1276.8 1181.5 L1282.8 1194.8 L1284.9 1200.6 L1289.5 1217.0 L1293.3 1233.0 L1294.3 1238.2 L1295.7 1250.5 L1294.0 1284.3 L1296.7 1327.3 L1300.4 1348.7 L1294.6 1368.1 L1289.7 1386.6 L1290.0 1395.8 L1292.7 1410.4 L1295.4 1421.1 L1299.0 1426.7 L1298.3 1444.8 L1296.8 1451.4 L1285.7 1460.8 L1273.3 1469.5 L1269.9 1476.9 L1268.9 1485.0 L1270.6 1491.7 L1279.1 1506.4 L1291.8 1528.5 L1305.8 1552.8 L1306.9 1558.9 L1307.5 1576.2 L1313.3 1597.9 L1319.7 1607.4 L1322.0 1614.5 L1326.5 1619.5 L1330.9 1623.2 L1333.7 1623.7 L1349.4 1617.8 L1376.3 1627.5 L1401.8 1637.5 L1403.6 1639.4 L1409.2 1652.0 L1418.3 1672.6 L1425.0 1689.0 L1431.1 1703.7 L1398.1 1729.1 L1365.1 1754.5 L1332.1 1779.9 L1299.1 1805.3 L1266.2 1830.7 L1233.2 1856.1 L1200.2 1881.5 L1167.2 1906.9 L1145.3 1923.7 L1131.4 1938.6 L1114.0 1957.2 L1097.5 1975.7 L1084.5 1990.3 L1067.7 2009.2 L1059.3 2018.7 L1040.5 2039.7 L1034.9 2043.4 L1010.1 2049.6 L987.3 2055.3 L966.3 2060.6 L952.0 2064.2 L938.1 2067.7 L917.8 2072.6 L903.4 2076.1 L887.8 2079.9 L885.4 2080.5 L882.6 2080.7 L880.5 2080.5 L876.2 2078.4 L871.0 2073.5 L867.5 2071.0 L866.6 2067.1 L868.7 2061.9 L871.2 2057.2 L872.1 2053.6 L873.9 2050.8 L876.1 2048.6 L876.2 2045.4 L874.3 2040.2 L872.7 2032.9 L872.8 2019.8 L872.8 2015.4 L872.8 2013.9 L868.2 2008.8 L859.4 2003.3 L851.3 2000.0 L847.6 1998.9 L838.7 1997.0 L826.4 1993.5 L822.0 1991.1 L814.1 1978.9 L810.1 1975.8 L791.6 1973.7 L785.5 1971.7 L780.5 1968.8 L776.1 1964.9 L773.7 1958.2 L773.0 1952.7 L771.4 1950.2 L751.0 1937.0 L745.8 1932.5 L743.0 1928.4 L742.9 1922.2 L743.5 1914.7 L742.6 1908.0 L741.8 1904.7 L732.4 1896.7 L711.6 1878.9 L690.7 1861.1 L669.9 1843.3 L649.0 1825.5 L628.2 1807.7 L607.3 1789.9 L586.4 1772.1 L565.6 1754.3 L544.7 1736.4 L523.9 1718.6 L503.0 1700.8 L482.1 1683.0 L461.3 1665.2 L440.4 1647.4 L419.6 1629.6 L398.7 1611.8 L381.1 1596.7 L361.6 1580.8 L347.2 1569.2 L332.8 1557.6 L317.4 1545.2 L307.4 1537.5 L295.4 1528.3 L283.4 1519.1 L271.4 1509.9 L259.4 1500.7 L247.5 1491.5 L235.5 1482.3 L223.5 1473.1 L211.5 1463.9 L199.6 1454.7 L187.6 1445.5 L175.6 1436.3 L163.6 1427.1 L151.6 1417.9 L139.7 1408.7 L127.7 1399.5 L115.7 1390.3 L115.7 1373.3 L115.7 1359.5 L115.7 1339.2 L115.7 1321.6 L115.7 1304.0 L115.7 1291.9 L115.7 1279.3 L116.0 1273.6 L117.2 1271.1 L123.7 1267.0 L133.8 1257.7 L137.5 1253.5 L142.3 1249.3 L159.3 1236.7 L162.8 1233.2 L179.3 1218.7 L183.1 1216.5 L192.0 1215.1 L195.7 1212.4 L200.7 1206.6 L208.0 1199.9 L212.7 1196.8 L213.9 1196.2 L216.9 1195.7 L232.1 1197.7 L238.5 1199.2 L246.2 1200.4 L248.6 1199.6 L250.6 1197.5 L253.5 1192.8 L254.1 1187.3 L254.3 1182.5 L254.7 1180.4 L256.1 1179.5 L259.4 1179.8 L263.8 1180.5 L272.9 1180.3 L276.0 1179.6 L286.4 1178.6 L301.0 1175.4 L312.5 1171.4 L321.7 1168.1 L331.6 1159.7 L338.8 1150.7 L346.4 1137.4 L352.3 1125.8 L364.4 1118.6 L374.5 1114.2 L380.3 1112.5 L393.4 1106.4 L404.5 1097.2 L414.9 1088.6 L422.9 1087.4 L433.0 1086.0 L435.2 1084.4 L437.8 1081.3 L437.9 1075.9 L434.9 1072.1 L431.2 1070.1 L428.6 1067.9 L426.0 1067.5 L424.6 1064.9 L425.4 1060.1 L425.8 1055.7 L427.4 1051.3 L427.0 1045.0 L424.4 1038.7 L423.6 1034.2 L423.8 1029.8 L425.0 1026.3 L428.8 1024.0 L433.1 1023.1 L439.2 1024.2 L449.7 1022.8 L476.6 1012.0 L478.5 1008.6 L480.2 1001.2 L482.1 994.6 L484.9 992.5 L486.4 992.0 L495.4 990.2 L508.1 987.7 L512.8 987.4 L526.7 988.1 L536.8 988.6 L553.1 989.5 L564.6 989.9 L574.7 990.3 L587.6 990.8 L590.7 989.3 L590.7 984.5 L588.4 975.6 L589.8 970.1 L594.7 965.0 L600.9 959.2 L598.0 952.2 L593.1 947.6 L586.2 942.0 L582.7 939.7 L576.4 932.9 L572.6 925.2 L570.0 908.9 L565.3 899.7 L561.8 888.5 L564.9 867.9 L560.3 855.4 L559.6 850.0 L559.6 843.6 L561.0 832.6 L560.1 817.2 L554.7 801.2 L557.2 795.8 L558.4 793.0 L558.0 790.6 L553.1 785.5 L551.0 781.3 L552.1 777.4 L554.6 771.7 L554.4 769.3 L546.4 762.3 L533.0 751.1 L529.3 746.2 L527.4 740.0 L540.3 741.6 L546.9 740.8 L562.2 733.4 L574.3 723.4 L583.7 718.3 L592.0 707.4 L599.5 700.5 L610.4 693.0 L641.6 677.0 L646.4 676.8 L656.7 680.5 L665.7 679.4 L671.8 673.7 L678.4 660.2 L688.7 651.9 L701.6 643.7 L719.2 635.8 L730.7 628.5 L748.9 622.2 L794.6 618.2 L818.0 614.7 L834.0 615.5 L850.1 604.0 L858.1 600.2 L893.0 599.3 L909.5 590.9 L971.9 590.9 L979.5 593.7 L987.0 598.2 L999.7 609.2 L1006.1 611.5 L1014.3 609.3 L1033.5 598.9 L1055.1 593.6 L1066.8 587.4 L1071.8 578.4 L1081.9 575.1 L1087.6 582.0 L1110.0 589.0 L1123.8 587.0 L1129.8 584.9 L1127.7 574.6 L1142.2 577.3 L1153.4 582.3 L1165.1 592.2 L1172.6 594.2 L1186.4 589.7 L1215.1 587.5Z"/>
+  <path class="map-land map-portugal" d="M109.7 171.3 L115.7 165.7 L121.7 162.0 L125.0 160.6 L138.7 156.8 L142.3 154.9 L145.7 155.2 L146.2 157.1 L148.2 160.6 L150.4 163.0 L151.0 164.9 L145.6 172.4 L144.9 175.0 L147.7 179.9 L148.2 181.3 L149.5 182.0 L153.2 181.8 L159.8 178.7 L164.3 176.0 L165.8 177.1 L178.8 175.6 L181.9 176.8 L183.9 178.2 L190.3 180.0 L197.2 180.2 L205.8 177.6 L209.6 175.1 L210.3 172.2 L210.5 170.1 L211.6 168.7 L213.6 167.9 L216.6 169.3 L221.0 170.5 L231.5 170.9 L233.6 169.3 L237.1 169.8 L241.8 171.8 L247.2 171.2 L250.0 173.6 L251.1 176.8 L251.4 183.9 L251.0 191.0 L252.1 193.6 L255.8 194.3 L261.7 194.2 L267.0 196.1 L271.1 199.5 L272.5 202.9 L273.1 205.3 L271.1 206.6 L268.2 211.7 L260.9 218.3 L250.6 224.3 L242.7 231.7 L237.2 240.6 L230.4 244.4 L228.3 246.4 L227.5 248.8 L232.0 259.7 L233.4 268.1 L234.5 278.3 L233.8 281.2 L233.4 292.5 L232.4 295.9 L232.6 298.5 L234.3 301.4 L235.0 304.2 L231.9 307.7 L226.2 311.8 L222.0 315.4 L220.9 318.8 L221.2 320.9 L228.3 328.0 L229.5 330.9 L228.6 338.0 L224.5 349.5 L220.6 356.5 L219.9 357.2 L215.4 359.2 L194.0 359.3 L188.8 360.9 L189.5 362.3 L194.6 371.3 L199.8 376.1 L201.6 377.2 L203.5 387.8 L211.9 404.7 L220.2 407.0 L223.1 411.2 L222.5 417.1 L220.0 423.6 L214.9 430.3 L208.9 435.0 L205.0 439.7 L204.7 445.1 L203.4 451.9 L201.5 457.4 L201.1 461.0 L216.2 484.0 L224.5 482.9 L225.6 483.5 L224.1 488.9 L221.5 495.4 L218.3 496.6 L211.1 498.6 L204.3 506.9 L198.8 516.9 L194.7 521.7 L190.9 533.6 L191.3 538.7 L193.2 546.7 L197.1 567.3 L191.5 568.3 L169.8 581.8 L163.1 581.8 L150.5 575.9 L128.4 574.0 L121.2 572.2 L112.2 576.1 L105.2 576.0 L99.7 580.9 L95.7 579.6 L100.2 568.5 L107.4 546.4 L107.1 533.0 L108.8 521.3 L106.8 509.7 L103.3 502.5 L108.1 483.8 L107.6 474.2 L103.1 461.9 L116.7 463.8 L112.5 459.0 L108.4 456.0 L104.4 456.7 L101.0 456.5 L89.4 461.2 L83.6 462.6 L82.0 461.8 L82.6 454.3 L79.6 444.5 L84.2 441.9 L89.6 441.1 L94.2 437.0 L97.0 432.3 L95.5 424.0 L99.5 416.1 L108.8 409.4 L104.0 410.4 L98.5 414.6 L89.7 429.7 L86.9 437.3 L79.5 439.8 L72.8 441.0 L69.4 440.2 L65.3 438.3 L65.0 432.6 L65.3 428.1 L68.1 419.2 L69.1 406.6 L73.1 395.3 L72.8 392.3 L71.7 387.8 L75.2 383.4 L79.5 380.5 L86.1 370.8 L95.3 347.7 L105.9 323.1 L105.0 320.1 L102.8 317.8 L103.7 311.2 L110.0 282.3 L112.6 278.6 L115.6 270.1 L116.3 256.5 L117.5 247.1 L117.2 242.4 L116.3 236.7 L112.2 225.9 L107.9 203.0 L107.6 195.3 L111.1 191.5 L105.3 190.9 L102.7 185.9 L103.3 180.3 L109.7 171.3Z"/>
+  <path class="map-land map-spain" d="M770.3 443.2 L768.9 444.3 L764.6 443.3 L758.3 443.3 L758.1 439.9 L759.1 437.6 L760.3 435.2 L764.1 439.9 L770.2 440.7 L770.3 443.2Z M869.1 350.2 L875.2 353.0 L881.7 350.5 L885.1 351.3 L888.5 352.6 L889.3 357.9 L886.3 363.7 L882.1 369.7 L878.5 376.2 L875.5 383.7 L869.7 388.2 L864.5 390.8 L853.5 385.3 L847.1 383.9 L845.2 381.8 L843.7 373.5 L840.8 370.8 L836.6 369.6 L832.9 371.8 L828.0 376.2 L825.4 371.8 L821.3 371.0 L819.7 368.3 L819.8 364.9 L846.2 344.8 L853.8 340.4 L870.0 335.2 L872.5 336.0 L870.3 339.0 L870.5 340.4 L872.5 341.9 L872.0 344.3 L870.0 346.3 L869.1 350.2Z M942.3 345.9 L941.1 346.8 L921.5 337.2 L915.1 336.2 L913.5 334.7 L913.7 329.7 L914.2 327.5 L927.3 326.5 L937.9 330.0 L943.6 339.6 L944.1 341.3 L942.3 345.9Z M760.8 422.7 L758.5 427.8 L748.8 426.0 L746.7 423.9 L748.8 418.1 L751.6 417.4 L751.8 413.3 L754.7 409.2 L768.4 405.8 L771.5 408.6 L772.2 412.7 L764.0 421.5 L760.8 422.7Z M554.5 49.3 L554.6 52.2 L557.1 56.2 L559.7 57.6 L565.1 59.7 L569.3 60.0 L575.0 60.9 L578.9 63.2 L579.2 66.8 L578.2 70.8 L575.8 74.4 L574.5 77.3 L575.7 78.9 L577.8 80.1 L580.0 80.5 L581.5 80.1 L582.6 77.8 L584.8 75.1 L586.0 74.8 L585.9 76.3 L586.9 78.2 L593.9 81.4 L609.3 87.4 L615.3 87.5 L620.2 88.2 L621.6 90.7 L631.4 99.9 L633.8 99.7 L638.1 99.9 L643.4 99.1 L647.2 97.4 L649.7 97.7 L652.5 99.5 L655.7 101.0 L659.9 104.1 L663.6 107.8 L666.2 109.0 L681.6 106.5 L685.1 108.7 L688.7 108.7 L692.8 108.1 L701.8 109.3 L709.0 109.0 L709.7 108.1 L710.3 99.8 L711.5 96.8 L713.2 96.1 L717.5 96.7 L733.1 101.6 L739.6 104.6 L745.8 107.0 L751.2 107.3 L754.7 108.9 L759.8 116.8 L758.9 120.7 L759.4 122.2 L759.9 125.0 L759.8 128.0 L761.1 130.0 L763.5 130.2 L766.5 129.6 L769.8 128.4 L775.7 125.0 L777.5 124.5 L787.2 128.3 L791.6 130.9 L793.1 133.7 L795.3 136.5 L798.3 137.0 L802.4 134.2 L808.9 131.3 L820.0 133.9 L832.4 137.6 L837.7 138.0 L837.9 136.2 L838.9 133.7 L840.9 132.4 L843.9 132.0 L848.1 130.7 L853.0 128.4 L858.0 127.5 L863.2 129.2 L869.6 130.5 L873.3 130.5 L875.1 135.8 L878.2 137.8 L879.4 142.3 L873.8 144.7 L870.5 145.0 L869.5 152.9 L871.0 155.1 L874.2 157.1 L875.0 159.5 L875.7 171.0 L869.2 177.9 L860.2 185.7 L816.0 210.7 L805.5 222.9 L801.4 225.6 L768.6 233.3 L745.6 241.4 L734.6 244.4 L720.8 258.6 L714.3 264.3 L719.5 265.9 L725.5 272.6 L723.5 275.6 L714.7 280.3 L710.8 281.7 L708.7 281.0 L706.8 281.6 L692.0 306.2 L678.9 323.9 L671.5 331.6 L664.0 343.0 L648.0 372.7 L647.8 381.2 L655.7 410.7 L660.3 418.4 L666.6 425.0 L678.7 430.5 L681.6 435.9 L677.5 441.1 L665.4 450.4 L644.5 462.9 L635.6 472.7 L633.7 482.2 L627.6 486.5 L625.3 499.8 L621.6 508.6 L620.8 511.5 L616.9 518.2 L616.4 523.1 L622.8 529.8 L619.6 532.7 L616.4 534.0 L609.0 534.7 L584.2 535.6 L564.3 550.1 L554.3 562.9 L545.3 586.8 L534.3 600.9 L529.4 603.4 L521.9 597.3 L512.6 596.3 L503.5 598.4 L498.7 603.3 L491.2 606.0 L484.0 603.6 L468.2 602.4 L461.2 602.6 L450.2 606.6 L440.8 603.9 L425.0 602.6 L390.6 605.7 L386.3 607.2 L382.0 613.1 L371.1 623.3 L354.4 623.7 L339.4 630.2 L335.6 634.4 L329.3 645.8 L327.3 654.2 L326.0 654.3 L324.4 652.2 L322.1 652.9 L320.9 659.3 L315.2 662.2 L310.5 663.3 L298.8 658.1 L289.1 650.3 L284.0 649.8 L275.8 637.7 L272.2 630.0 L269.7 621.7 L270.2 618.5 L269.5 615.8 L262.2 612.5 L260.4 604.8 L265.7 594.9 L270.1 590.7 L272.8 589.5 L266.2 589.9 L261.4 596.3 L255.3 586.0 L230.3 566.1 L231.9 561.5 L231.6 559.1 L227.4 564.4 L224.5 565.8 L211.8 564.9 L197.1 567.3 L193.2 546.7 L191.3 538.7 L190.9 533.6 L194.7 521.7 L198.8 516.9 L204.3 506.9 L211.1 498.6 L218.3 496.6 L221.5 495.4 L224.1 488.9 L225.6 483.5 L224.5 482.9 L216.2 484.0 L201.1 461.0 L201.5 457.4 L203.4 451.9 L204.7 445.1 L205.0 439.7 L208.9 435.0 L214.9 430.3 L220.0 423.6 L222.5 417.1 L223.1 411.2 L220.2 407.0 L211.9 404.7 L203.5 387.8 L201.6 377.2 L199.8 376.1 L194.6 371.3 L189.5 362.3 L188.8 360.9 L194.0 359.3 L215.4 359.2 L219.9 357.2 L220.6 356.5 L224.5 349.5 L228.6 338.0 L229.5 330.9 L228.3 328.0 L221.2 320.9 L220.9 318.8 L222.0 315.4 L226.2 311.8 L231.9 307.7 L235.0 304.2 L234.3 301.4 L232.6 298.5 L232.4 295.9 L233.4 292.5 L233.8 281.2 L234.5 278.3 L233.4 268.1 L232.0 259.7 L227.5 248.8 L228.3 246.4 L230.4 244.4 L237.2 240.6 L242.7 231.7 L250.6 224.3 L260.9 218.3 L268.2 211.7 L271.1 206.6 L273.1 205.3 L272.5 202.9 L271.1 199.5 L267.0 196.1 L261.7 194.2 L255.8 194.3 L252.1 193.6 L251.0 191.0 L251.4 183.9 L251.1 176.8 L250.0 173.6 L247.2 171.2 L241.8 171.8 L237.1 169.8 L233.6 169.3 L231.5 170.9 L221.0 170.5 L216.6 169.3 L213.6 167.9 L211.6 168.7 L210.5 170.1 L210.3 172.2 L209.6 175.1 L205.8 177.6 L197.2 180.2 L190.3 180.0 L183.9 178.2 L181.9 176.8 L178.8 175.6 L165.8 177.1 L164.3 176.0 L159.8 178.7 L153.2 181.8 L149.5 182.0 L148.2 181.3 L147.7 179.9 L144.9 175.0 L145.6 172.4 L151.0 164.9 L150.4 163.0 L148.2 160.6 L146.2 157.1 L145.7 155.2 L142.3 154.9 L138.7 156.8 L125.0 160.6 L121.7 162.0 L115.7 165.7 L109.7 171.3 L104.9 172.4 L103.3 170.8 L102.7 157.6 L110.0 148.8 L115.2 143.6 L112.8 142.5 L107.3 142.6 L107.6 138.5 L110.2 136.6 L112.7 132.1 L109.8 130.2 L107.5 127.3 L107.6 119.6 L108.3 116.5 L107.5 113.1 L96.3 117.6 L93.4 117.0 L93.3 111.3 L99.5 102.6 L100.2 99.9 L92.9 98.7 L87.4 94.4 L84.1 90.6 L80.6 85.1 L80.5 80.2 L84.2 68.7 L89.5 65.4 L94.0 63.3 L103.6 55.4 L116.8 56.8 L125.0 55.1 L132.4 51.1 L136.6 50.2 L143.4 46.6 L143.2 41.8 L140.8 38.3 L142.9 34.9 L150.5 30.9 L158.9 25.4 L168.6 24.4 L178.5 19.6 L185.1 22.7 L190.9 21.6 L197.5 25.3 L206.2 33.7 L219.0 37.1 L229.3 34.5 L247.3 33.9 L256.3 35.0 L272.3 33.0 L281.5 33.7 L296.4 29.5 L307.9 34.7 L330.2 37.2 L343.6 41.4 L380.7 48.6 L394.1 48.7 L413.0 44.7 L421.1 41.6 L428.4 43.4 L439.2 40.0 L444.4 40.7 L451.1 45.6 L474.8 52.3 L481.0 46.6 L485.7 45.4 L502.7 48.8 L519.9 55.9 L528.9 56.4 L542.0 54.5 L552.3 49.8 L554.5 49.3Z M777.5 124.5 L775.7 125.0 L769.8 128.4 L766.5 129.6 L763.5 130.2 L761.1 130.0 L759.8 128.0 L759.9 125.0 L759.4 122.2 L758.9 120.7 L759.8 116.8 L761.7 114.7 L764.4 112.9 L768.7 113.5 L777.7 116.1 L779.6 118.5 L779.6 120.1 L778.0 122.6 L777.5 124.5Z"/>
+  </g>
+  <path class="map-route" d=""/>
+  <g class="map-pin" data-step="0" transform="translate(387.3 605.6)">
+    <circle class="map-pulse" r="16"/>
+    <circle class="map-dot" r="9"/>
+    <text x="-22" y="8" text-anchor="end">Málaga</text>
+  </g>
+  <g class="map-pin" data-step="1" transform="translate(287.9 549.8)">
+    <circle class="map-pulse" r="16"/>
+    <circle class="map-dot" r="9"/>
+    <text x="-22" y="8" text-anchor="end">Sevilla</text>
+  </g>
+  <g class="map-pin" data-step="2" transform="translate(807.0 217.1)">
+    <circle class="map-pulse" r="16"/>
+    <circle class="map-dot" r="9"/>
+    <text x="0" y="50" text-anchor="middle">Barcelona</text>
+  </g>
+</svg>
+</div>
+<aside class="notes">El año pasado, 2025, fue para mí el año de los microcontroladores y de Micropython. Primero con una ponencia en
+OpenSouthCode, en Málaga, y luego aquí, en PyConES, en formato de taller, donde los asistentes programaron
+sus propios microcontroladores desde la misma presentación. Ambos tuvieron una gran acogida.</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Sobre mí" id="otras-charlas">
+<h3>Otras <strong>charlas</strong></h3>
+<div class="centered docutils container">
+<a class="reference internal image-reference" href="_images/talks1.jpg"><img alt="_images/talks1.jpg" src="_images/talks1.jpg" style="height: 400px;" />
+</a>
+<a class="reference internal image-reference" href="_images/talks2.jpg"><img alt="_images/talks2.jpg" src="_images/talks2.jpg" style="height: 400px;" />
+</a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<a class="reference internal image-reference" href="_images/python-malaga-logo-white.png"><img alt="_images/python-malaga-logo-white.png" src="_images/python-malaga-logo-white.png" style="height: 70px;" />
+</a>
+<a class="reference internal image-reference" href="_images/plytix-logo-white.svg"><img alt="_images/plytix-logo-white.svg" src="_images/plytix-logo-white.svg" style="height: 56px;" />
+</a>
+</div>
+<aside class="notes">Si venís de Málaga, os recomiendo echarle un ojo a nuestra comunidad, Python Málaga, donde hacemos charlas,
+talleres, concursos y networking. Las fotos son de un evento en las oficinas de Plytix, donde trabajo.</aside></section>
+</section>
+<section >
+<section data-scene="face" data-background-color="#000000" data-transition="fade" id="la-pregunta">
+<h2>La pregunta</h2>
+
+<div class="sc-face small" data-emotion="doubt" aria-hidden="true">
+  <div class="sc-cheek left"></div><div class="sc-cheek right"></div>
+  <div class="sc-eye left"><div class="sc-lid"></div></div>
+  <div class="sc-eye right"><div class="sc-lid"></div></div>
+  <div class="sc-mouth"></div>
+</div>
+<p class="big-question">¿Y esto <strong>para qué sirve</strong>?</p>
+<aside class="notes">Pero en ambas charlas llegaba siempre la misma pregunta. Al final, alguien levantaba la mano y decía: muy bonito
+lo de encender LEDs, pero... ¿y esto para qué sirve?</aside></section>
+<section data-scene="face" data-background-color="#000000" id="algo-mas-serio">
+<h3>¿Algo más <strong>serio</strong>?</h3>
+
+<div class="sc-face small" data-emotion="surprised" aria-hidden="true">
+  <div class="sc-cheek left"></div><div class="sc-cheek right"></div>
+  <div class="sc-eye left"><div class="sc-lid"></div></div>
+  <div class="sc-eye right"><div class="sc-lid"></div></div>
+  <div class="sc-mouth"></div>
+</div>
+<p class="big-question">¿De verdad puede usarse Micropython en algo <strong>más serio</strong>?</p>
+<aside class="notes">O peor aún: ¿de verdad puede usarse Micropython en algo más serio? Pues bien, hoy vamos a demostrar que sí. Y
+lo vamos a hacer desde el mundo de la robótica.</aside></section>
+<section data-scene="video" data-background-color="#000000" data-background-video="_images/robot_fall.mp4" data-background-video-loop="true" data-background-video-muted="true" data-background-size="cover" data-transition="zoom" id="bienvenidos-a-la-robotica">
+<h3>Bienvenidos a la <strong>robótica</strong></h3>
+<aside class="notes">Bienvenidos todos a la robótica con Micropython. Donde, como veis, no siempre todo sale a la primera.</aside></section>
+</section>
+<section >
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Micropython" data-transition="fade" data-fx="circuit" data-headline="two-weight" id="micropython-en-microcontroladores">
+<h2><strong>Micropython</strong> en microcontroladores</h2>
+<a class="reference internal image-reference" href="_images/micropython-logo.svg"><img alt="_images/micropython-logo.svg" class="align-center" src="_images/micropython-logo.svg" style="width: 30%;" />
+</a>
+<aside class="notes">Para quienes no vinierais a las charlas anteriores, un repaso rápido.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Micropython" data-fx="chip" id="que-es-un-microcontrolador">
+<h3>¿Qué es un <strong>microcontrolador</strong>?</h3>
+<ul class="simple">
+<li class="fragment"><p>Un <strong>chip</strong> que integra <strong>procesador, memoria y periféricos</strong>.</p></li>
+<li class="fragment"><p>🤏 <strong>Pequeño</strong>, 🤑 <strong>económico</strong> y 🪫 de <strong>bajo consumo</strong>.</p></li>
+<li class="fragment"><p>Habla <strong>directamente con el hardware</strong>: motores, sensores, LEDs...</p></li>
+<li class="fragment"><p><strong>Sin sistema operativo</strong>: tu programa es lo único que se ejecuta.</p></li>
+</ul>
+<aside class="notes">Un microcontrolador es un chip que reúne en una sola pieza el procesador, la memoria y los periféricos para
+comunicarse con el exterior. No es un ordenador como el vuestro: está pensado para hacer una tarea concreta,
+y al no tener sistema operativo, nuestro programa
+controla directamente el hardware, sin intermediarios. Por eso son perfectos para robótica: responden en tiempo
+real y gastan muy poco.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Micropython" id="el-cerebro-esp32-s3">
+<h3>El cerebro: <strong>ESP32-S3</strong></h3>
+<div class="stackchan-3d" data-mode="board" style="height: 620px"><span class="fragment sc3d-step"></span><span class="fragment sc3d-step"></span><span class="fragment sc3d-step"></span><span class="fragment sc3d-step"></span><span class="fragment sc3d-step"></span><span class="fragment sc3d-step"></span><canvas></canvas><div class="sc3d-labels"></div><div class="sc3d-controls"></div></div><aside class="notes">(Cada pulsación señala una parte de la placa.) Stack-chan lleva un ESP32-S3: WiFi y Bluetooth con la antena
+impresa en la propia placa, doble núcleo a 240 MHz, PSRAM, instrucciones vectoriales, 45 pines de propósito
+general y USB nativo, que nos permite programarlo con el mismo cable que lo alimenta. Es más potente que el
+ESP32 que usamos en el taller: tiene PSRAM, que nos permitirá
+trabajar con imágenes de la cámara, e instrucciones vectoriales, que acelerarán la inteligencia artificial que
+veremos en el quinto reto.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Micropython" id="que-es-micropython">
+<h3>¿Qué es <strong>Micropython</strong>?</h3>
+<ul class="simple">
+<li class="fragment"><p>Una implementación de <strong>Python 3</strong> para microcontroladores.</p></li>
+<li class="fragment"><p><strong>Intérprete y REPL</strong> en el propio chip, en 256 KB de flash.</p></li>
+<li class="fragment"><p><strong>Módulos para el hardware</strong>: <code class="docutils literal notranslate"><span class="pre">machine</span></code>, <code class="docutils literal notranslate"><span class="pre">network</span></code>, <code class="docutils literal notranslate"><span class="pre">asyncio</span></code>...</p></li>
+<li class="fragment"><p>Compatible con <strong>la mayor parte de lo que ya sabes</strong> de Python.</p></li>
+</ul>
+<aside class="notes">Micropython es una versión de Python 3 reducida y adaptada a microcontroladores. Lo más importante: incluye el
+intérprete y una consola interactiva dentro del propio chip, así que podemos enviarle código sin compilar
+nada, como vamos a hacer hoy desde la presentación.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Micropython" id="por-que-en-robotica">
+<h3>¿Por qué en <strong>robótica</strong>?</h3>
+<ul class="simple">
+<li class="fragment"><p>🔁 Probar un movimiento lleva <strong>segundos</strong>, no minutos de compilación.</p></li>
+<li class="fragment"><p>🐍 <strong>El mismo lenguaje</strong> en el robot, en el servidor y en la IA.</p></li>
+<li class="fragment"><p>⚡ Cuando hace falta <strong>velocidad</strong>: <code class="docutils literal notranslate"><span class="pre">&#64;micropython.viper</span></code> o módulos en C.</p></li>
+<li class="fragment"><p>🧪 Se puede <strong>simular</strong> y probar en el ordenador.</p></li>
+</ul>
+<aside class="notes">¿Y por qué usarlo en robótica, si el firmware oficial está en C++? Porque en robótica se itera muchísimo: ajustas
+un ángulo, pruebas, ajustas otra vez. Con Micropython, cada prueba son segundos. Y cuando necesitamos velocidad,
+tenemos decoradores como viper, o podemos escribir módulos en C para las partes críticas.</aside></section>
+</section>
+<section >
+<section data-scene="neon" data-background-color="#FF4F9A" data-transition="fade" id="casos-de-uso">
+<h2>Casos de <strong>uso</strong></h2>
+<p>Programar a <strong>Stack-chan</strong></p>
+<div class="stackchan-3d" data-mode="peek" style="height: 560px"><canvas></canvas><div class="sc3d-labels"></div><div class="sc3d-controls"></div></div><aside class="notes">Vamos con los casos de uso. ¿Qué podemos construir con Micropython? Para verlo, usaremos un robot.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Stack-chan" id="anatomia-de-stack-chan">
+<h3><strong>Anatomía</strong> de Stack-chan</h3>
+<div class="stackchan-3d" data-mode="anatomy" style="height: 620px"><canvas></canvas><div class="sc3d-labels"></div><div class="sc3d-controls"></div></div><aside class="notes">Este es Stack-chan: un robot open source y de hardware libre, creado por la comunidad japonesa, que hoy se
+puede comprar ya montado. Veamos qué lleva dentro. En la cabeza hay un M5Stack CoreS3: pantalla táctil, cámara, micrófono, altavoz, un
+acelerómetro y el ESP32-S3. Arriba, un sensor táctil con tres zonas y doce LEDs. Y en el cuerpo, la batería y dos
+servos: uno para girar y otro para inclinar la cabeza. Podéis girar el modelo con el ratón.</aside></section>
+</section>
+<section >
+<section data-scene="face" data-background-color="#000000" data-transition="fade" data-big="01" id="primer-reto-los-servos">
+<h2>Primer reto: los <strong>servos</strong></h2>
+
+<div class="sc-face small" data-emotion="wink" aria-hidden="true">
+  <div class="sc-cheek left"></div><div class="sc-cheek right"></div>
+  <div class="sc-eye left"><div class="sc-lid"></div></div>
+  <div class="sc-eye right"><div class="sc-lid"></div></div>
+  <div class="sc-mouth"></div>
+</div>
+<p class="dimension">Reto 1 de 5</p>
+<aside class="notes">Primer reto: que Stack-chan se mueva. Para eso, tenemos que controlar sus servos.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Reto 1: servos" id="como-funciona-un-servo">
+<h3>¿Cómo funciona un <strong>servo</strong>?</h3>
+<div class="stackchan-3d" data-mode="servo" style="height: 660px"><span class="fragment sc3d-step"></span><span class="fragment sc3d-step"></span><span class="fragment sc3d-step"></span><span class="fragment sc3d-step"></span><span class="fragment sc3d-step"></span><span class="fragment sc3d-step"></span><canvas></canvas><div class="sc3d-labels"></div><div class="sc3d-controls"></div></div><aside class="notes">Por dentro, un servo es un motor pequeño y rápido, una reductora que lo convierte en lento y con fuerza, un
+sensor de posición, normalmente un potenciómetro en el eje de salida, y un circuito de control que compara dónde
+está con dónde le pedimos que esté, y mueve el motor hasta que coinciden. (Siguiente.) Los de modelismo se
+controlan por PWM: cada 20 milisegundos un pulso, y su anchura es el ángulo: medio milisegundo son 0 grados, dos
+y medio son 180. En Micropython basta con PWM y duty_ns (mover el control). Pero es de solo ida: nunca nos dice
+si ha llegado o si algo lo bloquea. (Siguiente.) Los de bus serie, como los Feetech SCS de Stack-chan, comparten un cable con una
+UART: cada servo tiene un identificador, le mandamos paquetes con órdenes, y si le preguntamos, nos contesta
+dónde está.</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Reto 1: servos" id="hablar-con-un-servo-de-bus">
+<h3>Hablar con un servo de <strong>bus</strong></h3>
+
+<div class="micropython-demo" data-demo="demo1a_bus" data-steps="3,7|10-16|11-12|14|19-22|25-27|28-30">
+  <pre class="demo-source" style="display: none"># Challenge 1: talk to a serial bus servo with just a UART
+import time
+from machine import UART
+from hardware.stackchan import StackChan
+
+StackChan(i2c=1, uart=1).set_servo_power(True)   # Stack-chan: servo power
+uart = UART(1, baudrate=1_000_000, tx=6, rx=7)
+
+
+def send(servo, instruction, *params):
+    # FF FF  ID  LEN  INSTRUCTION  PARAMS...  CHECKSUM
+    body = bytes([servo, len(params) + 2, instruction]) + bytes(params)
+    uart.read()                                  # drop stale bytes
+    uart.write(b&quot;\xff\xff&quot; + body + bytes([~sum(body) &amp; 0xFF]))
+    time.sleep_ms(3)
+    return uart.read()                           # its answer
+
+
+def move(servo, steps, ms):
+    # WRITE (0x03) register 42: goal position, time, speed
+    send(servo, 0x03, 42, steps &gt;&gt; 8, steps &amp; 0xFF,
+         ms &gt;&gt; 8, ms &amp; 0xFF, 0, 0)
+
+
+for steps in (560, 360, 460):                    # servo 1 turns the head
+    move(1, steps, 1200)                         # slowly: sudden starts reset the board
+    time.sleep_ms(1400)
+    reply = send(1, 0x02, 56, 2)                 # READ 2 bytes of register 56
+    position = reply[5] &lt;&lt; 8 | reply[6]          # FF FF ID LEN ERR [HI LO] CHK
+    print(&quot; &quot;.join(&quot;%02X&quot; % b for b in reply), &quot;-&gt;&quot;, position)</pre>
+  <span class="fragment code-step" data-step="0"></span><span class="fragment code-step" data-step="1"></span><span class="fragment code-step" data-step="2"></span><span class="fragment code-step" data-step="3"></span><span class="fragment code-step" data-step="4"></span><span class="fragment code-step" data-step="5"></span><span class="fragment code-step" data-step="6"></span>
+  <div class="demo-toolbar">
+    <span class="demo-name">demo1a_bus</span>
+    <span class="status-indicator" title="Desconectado"></span>
+    <select class="demo-target" aria-label="Destino">
+      <option value="serial">Robot (USB)</option>
+      <option value="simulator">Simulador</option>
+    </select>
+    <button class="connect">Conectar</button>
+    <button class="send" disabled>Ejecutar</button>
+    <button class="stop" disabled>Parar</button>
+    <button class="restart" disabled>Reiniciar</button>
+    <span class="spacer"></span>
+    <button class="font-down" aria-label="Reducir fuente">A-</button>
+    <button class="font-up" aria-label="Aumentar fuente">A+</button>
+    <button class="toggle-video" aria-label="Alternar cámara y simulador">Cámara</button>
+  </div>
+  <div class="demo-body" style="height: 580px">
+    <div class="editor"></div>
+    <div class="resizer"></div>
+    <pre class="terminal"></pre>
+  </div>
+</div>
+<aside class="notes">Sin librerías del robot: solo una UART de Micropython. Cada servo del bus tiene un identificador y le hablamos con
+paquetes: cabecera, identificador, longitud, instrucción, parámetros y una suma de comprobación. Para moverlo,
+escribimos en su registro 42 la posición y el tiempo. Y como el bus es bidireccional, si le pedimos que lea su
+registro 56, nos contesta dónde está. Esto sirve para cualquier servo Feetech SCS, no solo para Stack-chan: lo
+único propio del robot es encender la alimentación de los servos. (Ejecutar.) La cabeza gira a un lado, al otro y
+vuelve, y en el terminal vemos cada respuesta del servo en hexadecimal, con la posición que nos dice.</aside></section>
+</section>
+<section >
+<section data-scene="face" data-background-color="#000000" data-transition="fade" data-big="02" id="segundo-reto-los-sensores">
+<h2>Segundo reto: los <strong>sensores</strong></h2>
+
+<div class="sc-face small" data-emotion="ticklish" aria-hidden="true">
+  <div class="sc-cheek left"></div><div class="sc-cheek right"></div>
+  <div class="sc-eye left"><div class="sc-lid"></div></div>
+  <div class="sc-eye right"><div class="sc-lid"></div></div>
+  <div class="sc-mouth"></div>
+</div>
+<p class="dimension">Reto 2 de 5</p>
+<aside class="notes">Ya se mueve. Pero un robot que no siente lo que pasa a su alrededor es solo una marioneta. Segundo reto: los
+sensores.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Reto 2: sensores" data-fx="ripples" id="que-siente-stack-chan">
+<h3>¿Qué <strong>siente</strong> Stack-chan?</h3>
+<ul class="simple">
+<li class="fragment"><p>✋ <strong>Táctil</strong>: <strong>tres zonas</strong> en la cabeza para acariciarlo.</p></li>
+<li class="fragment"><p>🧭 <strong>IMU</strong>: acelerómetro y giroscopio, sabe si lo <strong>inclinas</strong> o lo <strong>agitas</strong>.</p></li>
+<li class="fragment"><p>💡 <strong>Luz y proximidad</strong>: sabe si hay luz y si <strong>te acercas</strong>.</p></li>
+<li class="fragment"><p>🔋 <strong>Batería</strong>: tensión, corriente y potencia.</p></li>
+</ul>
+<aside class="notes">Stack-chan tiene un sensor táctil en la cabeza, dividido en tres zonas, con el que detecta caricias. Una IMU que
+le dice si lo inclinamos o lo agitamos. Un sensor de luz y proximidad junto a la pantalla. Y un monitor de
+batería. Todo esto se comunica por I2C, que vimos en el taller.</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Reto 2: sensores" id="demo-acariciame">
+<h3>Demo: <strong>acaríciame</strong></h3>
+
+<div class="micropython-demo" data-demo="demo3_cabeza" data-steps="6-8|11-15|23-24|25-28|29-32">
+  <pre class="demo-source" style="display: none"># Challenge 2a: pet the head (Si12T capacitive sensor: 3 zones over I2C)
+import time
+import M5
+from machine import I2C, Pin
+
+i2c = I2C(1, scl=Pin(11), sda=Pin(12), freq=400_000)
+SI12T = 0x68                                   # touch controller address
+IOE = 0x6F                                     # I/O expander: drives the 12 LEDs
+
+
+def leds(rgb):
+    r, g, b = rgb &gt;&gt; 16, rgb &gt;&gt; 8 &amp; 0xFF, rgb &amp; 0xFF
+    color = (r &amp; 0xF8) &lt;&lt; 8 | (g &amp; 0xFC) &lt;&lt; 3 | b &gt;&gt; 3              # RGB565
+    i2c.writeto_mem(IOE, 0x30, bytes([color &amp; 0xFF, color &gt;&gt; 8]) * 12)
+    i2c.writeto_mem(IOE, 0x24, bytes([12 | 1 &lt;&lt; 6]))               # 12 LEDs, show
+
+
+ZONES = (&quot;delante&quot;, &quot;centro&quot;, &quot;detrás&quot;)
+COLORS = (0x39D0D8, 0xFF4F9A, 0xFFC44D)
+LEVELS = (&quot;&quot;, &quot;suave&quot;, &quot;medio&quot;, &quot;fuerte&quot;)
+last = None
+while True:
+    raw = i2c.readfrom_mem(SI12T, 0x10, 1)[0]  # 2 bits per zone
+    levels = [(raw &gt;&gt; shift) &amp; 0b11 for shift in (0, 2, 4)]
+    if levels != last:
+        touched = [f&quot;{ZONES[i]} ({LEVELS[v]})&quot; for i, v in enumerate(levels) if v]
+        print(&quot;toque:&quot;, &quot; + &quot;.join(touched) if touched else &quot;-&quot;,
+              &quot; &quot;.join(&quot;█&quot; * v + &quot;·&quot; * (3 - v) for v in levels))
+        strongest = levels.index(max(levels))
+        leds(COLORS[strongest] if touched else 0)
+        if touched:
+            M5.Speaker.tone(600 + 200 * strongest, 40)
+        last = levels
+    time.sleep_ms(50)</pre>
+  <span class="fragment code-step" data-step="0"></span><span class="fragment code-step" data-step="1"></span><span class="fragment code-step" data-step="2"></span><span class="fragment code-step" data-step="3"></span><span class="fragment code-step" data-step="4"></span>
+  <div class="demo-toolbar">
+    <span class="demo-name">demo3_cabeza</span>
+    <span class="status-indicator" title="Desconectado"></span>
+    <select class="demo-target" aria-label="Destino">
+      <option value="serial">Robot (USB)</option>
+      <option value="simulator">Simulador</option>
+    </select>
+    <button class="connect">Conectar</button>
+    <button class="send" disabled>Ejecutar</button>
+    <button class="stop" disabled>Parar</button>
+    <button class="restart" disabled>Reiniciar</button>
+    <span class="spacer"></span>
+    <button class="font-down" aria-label="Reducir fuente">A-</button>
+    <button class="font-up" aria-label="Aumentar fuente">A+</button>
+    <button class="toggle-video" aria-label="Alternar cámara y simulador">Cámara</button>
+  </div>
+  <div class="demo-body" style="height: 580px">
+    <div class="editor"></div>
+    <div class="resizer"></div>
+    <pre class="terminal"></pre>
+  </div>
+</div>
+<aside class="notes">Otra vez sin librerías del robot: el sensor táctil es un chip Si12T en el bus I2C, que el robot ya deja
+configurado al arrancar. Leemos un solo registro, el 0x10, que trae dos bits por zona: delante, centro y
+detrás, y cuánta presión. Cada cambio sale por la consola, para que se vea aunque no se oiga el pitido. Los
+LEDs también van por I2C: los manda un expansor, al que escribimos los colores y le decimos que los muestre.
+(Ejecutar y acariciar la cabeza de delante a atrás.) Con las tres zonas podemos detectar incluso la dirección
+de la caricia, que es lo que hace el firmware completo.</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Reto 2: sensores" id="demo-como-me-has-dejado">
+<h3>Demo: ¿<strong>cómo</strong> me has dejado?</h3>
+
+<div class="micropython-demo" data-demo="demo4_imu" data-steps="18-20|23|26-28|29-32|33-40|41-44">
+  <pre class="demo-source" style="display: none"># Challenge 2b: IMU, how have you left me?
+import math
+import time
+import M5
+from machine import I2C, Pin
+
+i2c = I2C(1, scl=Pin(11), sda=Pin(12), freq=400_000)
+IOE = 0x6F                                     # I/O expander: drives the 12 LEDs
+
+
+def leds(rgb):
+    r, g, b = rgb &gt;&gt; 16, rgb &gt;&gt; 8 &amp; 0xFF, rgb &amp; 0xFF
+    color = (r &amp; 0xF8) &lt;&lt; 8 | (g &amp; 0xFC) &lt;&lt; 3 | b &gt;&gt; 3              # RGB565
+    i2c.writeto_mem(IOE, 0x30, bytes([color &amp; 0xFF, color &gt;&gt; 8]) * 12)
+    i2c.writeto_mem(IOE, 0x24, bytes([12 | 1 &lt;&lt; 6]))               # 12 LEDs, show
+
+
+def gravity():
+    x, y, z = M5.Imu.getAccel()                # in g: at rest, only gravity
+    return x, y, z, math.sqrt(x * x + y * y + z * z)
+
+
+ux, uy, uz, ug = gravity()                     # the pose it starts in is &quot;upright&quot;
+last, calm_at = None, 0
+while True:
+    x, y, z, g = gravity()
+    cos = (x * ux + y * uy + z * uz) / (g * ug)
+    angle = math.acos(max(-1, min(1, cos))) * 180 / math.pi
+    if g &gt; 1.8:                                # a shake: far more than 1 g
+        calm_at = time.ticks_add(time.ticks_ms(), 800)
+    if time.ticks_diff(calm_at, time.ticks_ms()) &gt; 0:
+        state, color = &quot;¡agitado!&quot;, 0xFF0000
+    elif angle &lt; 20:
+        state, color = &quot;de pie&quot;, 0x39D0D8
+    elif angle &lt; 60:
+        state, color = &quot;inclinado&quot;, 0xFFC44D
+    elif angle &lt; 140:
+        state, color = &quot;tumbado&quot;, 0xFF4F9A
+    else:
+        state, color = &quot;boca abajo&quot;, 0x8A5CFF
+    if state != last:                          # only when something changes
+        print(&quot;%-10s %3d°&quot; % (state, int(angle)))
+        leds(color)
+        last = state
+    time.sleep_ms(50)</pre>
+  <span class="fragment code-step" data-step="0"></span><span class="fragment code-step" data-step="1"></span><span class="fragment code-step" data-step="2"></span><span class="fragment code-step" data-step="3"></span><span class="fragment code-step" data-step="4"></span><span class="fragment code-step" data-step="5"></span>
+  <div class="demo-toolbar">
+    <span class="demo-name">demo4_imu</span>
+    <span class="status-indicator" title="Desconectado"></span>
+    <select class="demo-target" aria-label="Destino">
+      <option value="serial">Robot (USB)</option>
+      <option value="simulator">Simulador</option>
+    </select>
+    <button class="connect">Conectar</button>
+    <button class="send" disabled>Ejecutar</button>
+    <button class="stop" disabled>Parar</button>
+    <button class="restart" disabled>Reiniciar</button>
+    <span class="spacer"></span>
+    <button class="font-down" aria-label="Reducir fuente">A-</button>
+    <button class="font-up" aria-label="Aumentar fuente">A+</button>
+    <button class="toggle-video" aria-label="Alternar cámara y simulador">Cámara</button>
+  </div>
+  <div class="demo-body" style="height: 580px">
+    <div class="editor"></div>
+    <div class="resizer"></div>
+    <pre class="terminal"></pre>
+  </div>
+</div>
+<aside class="notes">Con la IMU leemos la aceleración en cada eje, en g. Si el robot está quieto, solo mide la gravedad: una flecha
+que apunta al suelo. Guardamos esa flecha al arrancar, como &quot;de pie&quot;, y cada vez calculamos el ángulo entre la
+flecha de ahora y la de entonces. Con ese ángulo sabemos si está de pie, inclinado, tumbado o boca abajo. Y si
+la aceleración supera mucho 1 g, es que lo están agitando. Cada cambio sale por la consola y cambia el color de
+los LEDs. (Ejecutar, inclinarlo, tumbarlo, ponerlo boca abajo y agitarlo.)</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Reto 2: sensores" id="demo-stack-chan-timido">
+<h3>Demo: Stack-chan <strong>tímido</strong></h3>
+
+<div class="micropython-demo" data-demo="demo5_proximidad" data-steps="12-14|29-35|39|40-43|44-48|49-53">
+  <pre class="demo-source" style="display: none"># Challenge 2c: shy Stack-chan (LTR-553 proximity sensor over I2C)
+import time
+from machine import I2C, Pin, UART
+from hardware.stackchan import StackChan
+
+StackChan(i2c=1, uart=1).set_servo_power(True)   # Stack-chan: servo power
+i2c = I2C(1, scl=Pin(11), sda=Pin(12), freq=400_000)
+uart = UART(1, baudrate=1_000_000, tx=6, rx=7)
+LTR553, IOE = 0x23, 0x6F                       # proximity sensor, LED driver
+
+
+def proximity():                               # infrared bounced back: 0 .. 2047
+    low, high = i2c.readfrom_mem(LTR553, 0x8D, 2)
+    return (high &amp; 0x07) &lt;&lt; 8 | low
+
+
+def leds(rgb):
+    r, g, b = rgb &gt;&gt; 16, rgb &gt;&gt; 8 &amp; 0xFF, rgb &amp; 0xFF
+    color = (r &amp; 0xF8) &lt;&lt; 8 | (g &amp; 0xFC) &lt;&lt; 3 | b &gt;&gt; 3              # RGB565
+    i2c.writeto_mem(IOE, 0x30, bytes([color &amp; 0xFF, color &gt;&gt; 8]) * 12)
+    i2c.writeto_mem(IOE, 0x24, bytes([12 | 1 &lt;&lt; 6]))               # 12 LEDs, show
+
+
+def turn(steps, ms):                           # head servo (ID 1), as in the bus demo
+    body = bytes([1, 9, 0x03, 42, steps &gt;&gt; 8, steps &amp; 0xFF, ms &gt;&gt; 8, ms &amp; 0xFF, 0, 0])
+    uart.write(b&quot;\xff\xff&quot; + body + bytes([~sum(body) &amp; 0xFF]))
+
+
+# The glass reflects some light too: measure it with nothing in front
+print(&quot;calibrando: no acerques la mano...&quot;)
+rest = 0
+for _ in range(10):
+    rest += proximity() / 10
+    time.sleep_ms(100)
+print(&quot;en reposo: %d&quot; % int(rest))
+
+near, shy, last = 0, False, None
+while True:
+    near = near * 0.7 + (proximity() - rest) * 0.3   # smoothed, above rest
+    bar = &quot;█&quot; * max(0, min(10, int(near // 25)))
+    if bar != last:                            # how close the hand is
+        print(&quot;mano %4d %s&quot; % (int(near), bar))
+        last = bar
+    if near &gt; 120 and not shy:
+        shy = True
+        print(&quot;¡qué vergüenza!&quot;)
+        leds(0xF7A59E)
+        turn(600, 1000)                        # look away, slowly
+    elif near &lt; 50 and shy:
+        shy = False
+        print(&quot;ya se ha ido&quot;)
+        leds(0)
+        turn(460, 1200)                        # back to the centre
+    time.sleep_ms(100)</pre>
+  <span class="fragment code-step" data-step="0"></span><span class="fragment code-step" data-step="1"></span><span class="fragment code-step" data-step="2"></span><span class="fragment code-step" data-step="3"></span><span class="fragment code-step" data-step="4"></span><span class="fragment code-step" data-step="5"></span>
+  <div class="demo-toolbar">
+    <span class="demo-name">demo5_proximidad</span>
+    <span class="status-indicator" title="Desconectado"></span>
+    <select class="demo-target" aria-label="Destino">
+      <option value="serial">Robot (USB)</option>
+      <option value="simulator">Simulador</option>
+    </select>
+    <button class="connect">Conectar</button>
+    <button class="send" disabled>Ejecutar</button>
+    <button class="stop" disabled>Parar</button>
+    <button class="restart" disabled>Reiniciar</button>
+    <span class="spacer"></span>
+    <button class="font-down" aria-label="Reducir fuente">A-</button>
+    <button class="font-up" aria-label="Aumentar fuente">A+</button>
+    <button class="toggle-video" aria-label="Alternar cámara y simulador">Cámara</button>
+  </div>
+  <div class="demo-body" style="height: 580px">
+    <div class="editor"></div>
+    <div class="resizer"></div>
+    <pre class="terminal"></pre>
+  </div>
+</div>
+<aside class="notes">El sensor de proximidad emite luz infrarroja y mide cuánta rebota: es otro chip I2C, el LTR-553, y basta con
+leer dos bytes. Pero el propio cristal del robot ya refleja algo de luz, así que nunca da cero: al arrancar
+medimos ese reposo, y luego miramos cuánto sube por encima, suavizando las lecturas para que no tiemble. Cuando
+acercamos la mano, Stack-chan se pone colorado y aparta la mirada; cuando la retiramos, vuelve a mirarnos.
+Percibir, decidir, actuar: el ciclo básico de cualquier robot.</aside></section>
+</section>
+<section >
+<section data-scene="face" data-background-color="#000000" data-transition="fade" data-big="03" id="tercer-reto-microfono-y-camara">
+<h2>Tercer reto: <strong>micrófono</strong> y <strong>cámara</strong></h2>
+
+<div class="sc-face small" data-emotion="curious" aria-hidden="true">
+  <div class="sc-cheek left"></div><div class="sc-cheek right"></div>
+  <div class="sc-eye left"><div class="sc-lid"></div></div>
+  <div class="sc-eye right"><div class="sc-lid"></div></div>
+  <div class="sc-mouth"></div>
+</div>
+<p class="dimension">Reto 3 de 5</p>
+<aside class="notes">Tercer reto: los sentidos más exigentes. Oír y ver. Aquí es donde mucha gente cree que Micropython no llega.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Reto 3: audio" data-fx="wave" id="oir-el-microfono">
+<h3><strong>Oír</strong>: el micrófono</h3>
+<ul class="simple">
+<li class="fragment"><p>El audio llega por <strong>I2S</strong>: <strong>16.000 muestras</strong> de 16 bits por segundo.</p></li>
+<li class="fragment"><p>Micrófono y altavoz <strong>comparten el bus</strong>: uno a la vez.</p></li>
+<li class="fragment"><p>Grabamos en un <code class="docutils literal notranslate"><span class="pre">array</span></code> para <strong>no crear objetos</strong> en cada muestra.</p></li>
+<li class="fragment"><p>Con el <strong>pico</strong> de cada bloque ya sabemos si hay ruido.</p></li>
+</ul>
+<aside class="notes">(Pulsar M: la onda del fondo escucha el micrófono de la sala.) El micrófono nos da 16000 números por segundo. Parece mucho para un microcontrolador, pero si grabamos en un
+array preasignado, Micropython no crea un objeto por muestra y va sobrado. El truco de rendimiento en
+Micropython casi siempre es el mismo: evitar crear objetos en los bucles.</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Reto 3: audio" id="demo-vumetro">
+<h3>Demo: <strong>vúmetro</strong></h3>
+
+<div class="micropython-demo" data-demo="demo6_microfono" data-steps="22-24|27-30|33|37-38|39-42">
+  <pre class="demo-source" style="display: none"># Challenge 3a: microphone, LEDs as a VU meter
+import array
+import time
+import M5
+from machine import I2C, Pin
+
+i2c = I2C(1, scl=Pin(11), sda=Pin(12), freq=400_000)
+IOE = 0x6F                                     # I/O expander: drives the 12 LEDs
+
+
+def rgb565(rgb):
+    r, g, b = rgb &gt;&gt; 16, rgb &gt;&gt; 8 &amp; 0xFF, rgb &amp; 0xFF
+    color = (r &amp; 0xF8) &lt;&lt; 8 | (g &amp; 0xFC) &lt;&lt; 3 | b &gt;&gt; 3
+    return bytes([color &amp; 0xFF, color &gt;&gt; 8])
+
+
+def show(colors):                              # one colour per LED (2 strips of 6)
+    i2c.writeto_mem(IOE, 0x30, b&quot;&quot;.join(rgb565(c) for c in colors))
+    i2c.writeto_mem(IOE, 0x24, bytes([12 | 1 &lt;&lt; 6]))
+
+
+M5.Speaker.end()                               # speaker and mic share the I2S bus
+M5.Mic.begin()
+samples = array.array(&quot;h&quot;, [0] * 800)          # 50 ms at 16 kHz
+
+
+def record():
+    M5.Mic.record(samples, 16000, False)
+    while M5.Mic.isRecording():
+        time.sleep_ms(5)
+
+
+record()                                       # the first one starts with a click
+last = None
+while True:
+    record()
+    peak = max(max(samples), -min(samples))    # loudest sample, 0 .. 32767
+    lit = min(6, peak * 6 // 12000)            # how many LEDs to light
+    if lit != last:                            # only when the level changes
+        show([0xFF4F9A if i &lt; lit else 0 for i in range(6)] * 2)
+        print(&quot;%5d %s&quot; % (peak, &quot;█&quot; * lit))
+        last = lit</pre>
+  <span class="fragment code-step" data-step="0"></span><span class="fragment code-step" data-step="1"></span><span class="fragment code-step" data-step="2"></span><span class="fragment code-step" data-step="3"></span><span class="fragment code-step" data-step="4"></span>
+  <div class="demo-toolbar">
+    <span class="demo-name">demo6_microfono</span>
+    <span class="status-indicator" title="Desconectado"></span>
+    <select class="demo-target" aria-label="Destino">
+      <option value="serial">Robot (USB)</option>
+      <option value="simulator">Simulador</option>
+    </select>
+    <button class="connect">Conectar</button>
+    <button class="send" disabled>Ejecutar</button>
+    <button class="stop" disabled>Parar</button>
+    <button class="restart" disabled>Reiniciar</button>
+    <span class="spacer"></span>
+    <button class="font-down" aria-label="Reducir fuente">A-</button>
+    <button class="font-up" aria-label="Aumentar fuente">A+</button>
+    <button class="toggle-video" aria-label="Alternar cámara y simulador">Cámara</button>
+  </div>
+  <div class="demo-body" style="height: 580px">
+    <div class="editor"></div>
+    <div class="resizer"></div>
+    <pre class="terminal"></pre>
+  </div>
+</div>
+<aside class="notes">El micrófono comparte el bus de audio con el altavoz, así que primero apagamos el altavoz. Grabamos bloques de
+50 milisegundos, calculamos el pico y encendemos tantos LEDs como fuerte sea el sonido; la consola dibuja el
+mismo nivel. La primera grabación la tiramos: empieza con un chasquido.
+(Ejecutar.) ¿Me ayudáis con un aplauso? ... ¡Gracias! Era para la demo, pero me lo quedo.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Reto 3: cámara" data-fx="viewfinder" id="ver-la-camara">
+<h3><strong>Ver</strong>: la cámara</h3>
+<ul class="simple">
+<li class="fragment"><p>Cámara <strong>GC0308</strong> de <strong>0,3 megapíxeles</strong>, bajo la pantalla.</p></li>
+<li class="fragment"><p>Una imagen QVGA en RGB565 ocupa <strong>150 KB</strong>: va a la <strong>PSRAM</strong>.</p></li>
+<li class="fragment"><p><code class="docutils literal notranslate"><span class="pre">camera.snapshot()</span></code> <strong>captura</strong>, <code class="docutils literal notranslate"><span class="pre">M5.Lcd.show()</span></code> la <strong>pinta</strong>.</p></li>
+</ul>
+<aside class="notes">La cámara es modesta, 0,3 megapíxeles, pero suficiente para un robot. Cada imagen de 320 por 240 ocupa 150 KB,
+más que toda la SRAM libre, así que vive en la PSRAM. Por eso necesitábamos un ESP32-S3.</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Reto 3: cámara" id="demo-lo-que-ve-stack-chan">
+<h3>Demo: lo que <strong>ve</strong> Stack-chan</h3>
+
+<div class="micropython-demo" data-demo="demo7_camara" data-steps="6|11-12|13-19">
+  <pre class="demo-source" style="display: none"># Challenge 3b: what Stack-chan sees (GC0308 camera); tap the screen for a photo
+import time
+import camera
+import M5
+
+camera.init(pixformat=camera.RGB565, framesize=camera.QVGA)
+photos, touching = 0, False
+
+while True:
+    M5.update()                                # refresh the touch screen
+    img = camera.snapshot()
+    M5.Lcd.show(img, 0, 0, 320, 240)
+    pressed = M5.Touch.getCount() &gt; 0          # a finger on the screen?
+    if pressed and not touching:               # only once per tap
+        photos += 1
+        print(&quot;📸 foto %d (320×240)&quot; % photos)
+        M5.Speaker.tone(1800, 60)
+        time.sleep_ms(2000)                    # freeze the picture
+    touching = pressed</pre>
+  <span class="fragment code-step" data-step="0"></span><span class="fragment code-step" data-step="1"></span><span class="fragment code-step" data-step="2"></span>
+  <div class="demo-toolbar">
+    <span class="demo-name">demo7_camara</span>
+    <span class="status-indicator" title="Desconectado"></span>
+    <select class="demo-target" aria-label="Destino">
+      <option value="serial">Robot (USB)</option>
+      <option value="simulator">Simulador</option>
+    </select>
+    <button class="connect">Conectar</button>
+    <button class="send" disabled>Ejecutar</button>
+    <button class="stop" disabled>Parar</button>
+    <button class="restart" disabled>Reiniciar</button>
+    <span class="spacer"></span>
+    <button class="font-down" aria-label="Reducir fuente">A-</button>
+    <button class="font-up" aria-label="Aumentar fuente">A+</button>
+    <button class="toggle-video" aria-label="Alternar cámara y simulador">Cámara</button>
+  </div>
+  <div class="demo-body" style="height: 580px">
+    <div class="editor"></div>
+    <div class="resizer"></div>
+    <pre class="terminal"></pre>
+  </div>
+</div>
+<aside class="notes">Capturamos y pintamos en un bucle. Y como la pantalla es táctil, al tocarla hacemos una foto: congelamos la
+imagen dos segundos. Fijaos en que comparamos con la vuelta anterior, para hacer una sola foto por toque y no
+una por cada imagen mientras el dedo sigue encima. (Ejecutar y tocar la pantalla.) Ahora tenemos una cámara grabando a un robot que muestra lo que
+graba su cámara. Si apunto mi cámara a su pantalla... recursividad en hardware.</aside></section>
+</section>
+<section >
+<section data-scene="face" data-background-color="#000000" data-transition="fade" data-big="04" id="cuarto-reto-la-pantalla">
+<h2>Cuarto reto: la <strong>pantalla</strong></h2>
+
+<div class="sc-face small" data-emotion="love" aria-hidden="true">
+  <div class="sc-cheek left"></div><div class="sc-cheek right"></div>
+  <div class="sc-eye left"><div class="sc-lid"></div></div>
+  <div class="sc-eye right"><div class="sc-lid"></div></div>
+  <div class="sc-mouth"></div>
+</div>
+<p class="dimension">Reto 4 de 5</p>
+<aside class="notes">Cuarto reto: la pantalla. Es la cara de Stack-chan, y una cara bien hecha es lo que hace que un robot parezca
+tener personalidad.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Reto 4: pantalla" data-fx="pixels" id="dos-formas-de-dibujar">
+<h3>Dos formas de <strong>dibujar</strong></h3>
+<div class="two-cols docutils container">
+<div class="docutils container">
+<p><strong>M5GFX</strong></p>
+<ul class="simple">
+<li><p><strong>Primitivas</strong>: rectángulos, círculos, texto.</p></li>
+<li><p><strong>Pintas y te olvidas</strong>.</p></li>
+<li><p>Ideal para <strong>empezar</strong>.</p></li>
+</ul>
+<div class="screen-robot" data-mode="gfx" aria-hidden="true"><div class="intro-head"><div class="intro-screen"><canvas width="320" height="240"></canvas></div><div class="intro-camera"></div></div><div class="intro-base"></div></div></div>
+<div class="docutils container">
+<p><strong>LVGL</strong></p>
+<ul class="simple">
+<li><p><strong>Objetos</strong> con estilos y animaciones.</p></li>
+<li><p>Solo <strong>repinta lo que cambia</strong>.</p></li>
+<li><p>Lo que usa el <strong>firmware real</strong>.</p></li>
+</ul>
+<div class="screen-robot" data-mode="lvgl" aria-hidden="true"><div class="intro-head"><div class="intro-screen"><canvas width="320" height="240"></canvas></div><div class="intro-camera"></div></div><div class="intro-base"></div></div></div>
+</div>
+<aside class="notes">Tenemos dos formas de dibujar. Con M5GFX pintamos primitivas directamente: rápido de entender. Con LVGL creamos
+objetos con estilos, y la librería se encarga de repintar solo lo que cambia, que es lo que necesitamos para
+animaciones fluidas.</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Reto 4: pantalla" id="demo-dibujar-una-cara">
+<h3>Demo: dibujar una <strong>cara</strong></h3>
+
+<div class="micropython-demo" data-demo="demo8_pantalla" data-steps="13-20|24-25|27-28">
+  <pre class="demo-source" style="display: none"># Challenge 4a: draw the face with M5GFX primitives
+import random
+import time
+import M5
+
+M5.begin()
+lcd = M5.Display
+lcd.setRotation(1)
+lcd.fillScreen(0x000000)
+WHITE, BLACK = 0xFFFFFF, 0x000000
+
+
+def face(dx=0, closed=False):
+    lcd.fillRect(40, 70, 240, 110, BLACK)
+    for x in (100, 220):
+        if closed:
+            lcd.fillRect(x - 14 + dx, 104, 28, 5, WHITE)
+        else:
+            lcd.fillCircle(x + dx, 106, 13, WHITE)
+    lcd.fillRect(130 + dx // 2, 160, 60, 5, WHITE)    # mouth
+
+
+while True:
+    look = random.choice((-14, 0, 0, 14))
+    face(look)
+    time.sleep_ms(random.randint(1200, 3000))
+    face(look, closed=True)                           # blink
+    time.sleep_ms(120)</pre>
+  <span class="fragment code-step" data-step="0"></span><span class="fragment code-step" data-step="1"></span><span class="fragment code-step" data-step="2"></span>
+  <div class="demo-toolbar">
+    <span class="demo-name">demo8_pantalla</span>
+    <span class="status-indicator" title="Desconectado"></span>
+    <select class="demo-target" aria-label="Destino">
+      <option value="serial">Robot (USB)</option>
+      <option value="simulator">Simulador</option>
+    </select>
+    <button class="connect">Conectar</button>
+    <button class="send" disabled>Ejecutar</button>
+    <button class="stop" disabled>Parar</button>
+    <button class="restart" disabled>Reiniciar</button>
+    <span class="spacer"></span>
+    <button class="font-down" aria-label="Reducir fuente">A-</button>
+    <button class="font-up" aria-label="Aumentar fuente">A+</button>
+    <button class="toggle-video" aria-label="Alternar cámara y simulador">Cámara</button>
+  </div>
+  <div class="demo-body" style="height: 580px">
+    <div class="editor"></div>
+    <div class="resizer"></div>
+    <pre class="terminal"></pre>
+  </div>
+</div>
+<aside class="notes">Dos círculos y un rectángulo: no hace falta más para una cara. Para que parezca viva, añadimos dos detalles:
+mira a un lado y a otro al azar, y parpadea. Fijaos en que el parpadeo dura solo 120 milisegundos, como el de
+una persona.</aside></section>
+</section>
+<section >
+<section data-scene="face" data-background-color="#000000" data-transition="fade" data-big="05" id="quinto-reto-inteligencia-artificial">
+<h2>Quinto reto: <strong>inteligencia artificial</strong></h2>
+
+<div class="sc-face small" data-emotion="thinking" aria-hidden="true">
+  <div class="sc-cheek left"></div><div class="sc-cheek right"></div>
+  <div class="sc-eye left"><div class="sc-lid"></div></div>
+  <div class="sc-eye right"><div class="sc-lid"></div></div>
+  <div class="sc-mouth"></div>
+</div>
+<p class="dimension">Reto 5 de 5</p>
+<aside class="notes">Y el último reto, el que todos estabais esperando: inteligencia artificial. En un ESP32.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Reto 5: IA" id="dos-caminos">
+<h3>Dos <strong>caminos</strong></h3>
+<div class="two-cols docutils container">
+<div class="docutils container">
+<p><strong>En el propio chip</strong></p>
+<ul class="simple">
+<li><p><strong>Detección de caras</strong> y objetos (ESP-DL).</p></li>
+<li><p><strong>Modelos pequeños</strong>: TFLite Micro, emlearn.</p></li>
+<li><p><strong>Sin red</strong>, sin latencia, <strong>sin enviar datos</strong>.</p></li>
+</ul>
+<canvas class="path-anim" data-mode="chip" width="480" height="240" aria-hidden="true"></canvas></div>
+<div class="docutils container">
+<p><strong>En la nube</strong></p>
+<ul class="simple">
+<li><p><strong>Modelos de lenguaje</strong> por HTTPS.</p></li>
+<li><p><strong>Agentes de voz</strong> para ESP32.</p></li>
+<li><p><strong>Toda la potencia</strong>, a cambio de red.</p></li>
+</ul>
+<canvas class="path-anim" data-mode="cloud" width="480" height="240" aria-hidden="true"></canvas></div>
+</div>
+<aside class="notes">Hay dos caminos. Ejecutar modelos pequeños en el propio chip, que es privado e instantáneo, pero limitado. O
+llamar a un modelo grande en la nube, que es muchísimo más capaz, pero necesita red. Un buen robot combina los
+dos: reflejos en local, razonamiento en la nube.</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Reto 5: IA" id="demo-sigueme">
+<h3>Demo: <strong>sígueme</strong></h3>
+
+<div class="micropython-demo" data-demo="demo10_caras" data-steps="10-11|22-23|25-26|27-30|31|32-34">
+  <pre class="demo-source" style="display: none"># Challenge 5a: on-device AI, follow the nearest face (ESP-DL)
+import camera
+import dl
+import M5
+from machine import UART
+from hardware.stackchan import StackChan
+
+StackChan(i2c=1, uart=1).set_servo_power(True)   # Stack-chan: servo power
+uart = UART(1, baudrate=1_000_000, tx=6, rx=7)
+camera.init(pixformat=camera.RGB565, framesize=camera.QVGA)
+detector = dl.ObjectDetector(dl.model.HUMAN_FACE_DETECT)
+
+
+def turn(steps, ms):                           # head servo (ID 1), as in the bus demo
+    body = bytes([1, 9, 0x03, 42, steps &gt;&gt; 8, steps &amp; 0xFF, ms &gt;&gt; 8, ms &amp; 0xFF, 0, 0])
+    uart.write(b&quot;\xff\xff&quot; + body + bytes([~sum(body) &amp; 0xFF]))
+
+
+yaw, seen = 460, False                         # start looking straight ahead
+turn(yaw, 1000)
+while True:
+    img = camera.snapshot()
+    faces = detector.infer(img)
+    if faces:
+        x, y, w, h = faces[0].bbox()           # the biggest face comes first
+        error = (x + w // 2) - 160             # pixels from the centre
+        if abs(error) &gt; 12:                    # dead zone: do not jitter
+            yaw -= max(-8, min(8, error * 0.1))   # proportional, a few steps a frame
+            yaw = max(200, min(720, yaw))
+            turn(int(yaw), 100)
+        img.draw_rectangle(x, y, w, h, color=0xFF4F9A, thickness=3, fill=False)
+    if bool(faces) != seen:                    # say it only when it changes
+        seen = bool(faces)
+        print(&quot;¡te veo!&quot; if seen else &quot;¿dónde estás?&quot;)
+    M5.Lcd.show(img, 0, 0, 320, 240)</pre>
+  <span class="fragment code-step" data-step="0"></span><span class="fragment code-step" data-step="1"></span><span class="fragment code-step" data-step="2"></span><span class="fragment code-step" data-step="3"></span><span class="fragment code-step" data-step="4"></span><span class="fragment code-step" data-step="5"></span>
+  <div class="demo-toolbar">
+    <span class="demo-name">demo10_caras</span>
+    <span class="status-indicator" title="Desconectado"></span>
+    <select class="demo-target" aria-label="Destino">
+      <option value="serial">Robot (USB)</option>
+      <option value="simulator">Simulador</option>
+    </select>
+    <button class="connect">Conectar</button>
+    <button class="send" disabled>Ejecutar</button>
+    <button class="stop" disabled>Parar</button>
+    <button class="restart" disabled>Reiniciar</button>
+    <span class="spacer"></span>
+    <button class="font-down" aria-label="Reducir fuente">A-</button>
+    <button class="font-up" aria-label="Aumentar fuente">A+</button>
+    <button class="toggle-video" aria-label="Alternar cámara y simulador">Cámara</button>
+  </div>
+  <div class="demo-body" style="height: 580px">
+    <div class="editor"></div>
+    <div class="resizer"></div>
+    <pre class="terminal"></pre>
+  </div>
+</div>
+<aside class="notes">Primero, en local. El detector de caras corre en el ESP32-S3 usando sus instrucciones vectoriales. Calculamos
+lo lejos que está la cara del centro de la imagen, y giramos la cabeza proporcionalmente a ese error, unos
+pocos pasos por imagen para que el movimiento sea suave. Esto se llama control proporcional, y es la base del
+control en robótica. (Ejecutar y moverse delante del robot.)</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Reto 5: IA" id="control-proporcional">
+<h3>Control <strong>proporcional</strong></h3>
+<pre data-id="control-proporcional"><code data-trim data-noescape class="python" data-line-numbers="1-2|1|2">error = face_x - 160          # how far from the centre?
+yaw -= error * 0.05           # correct a fraction of it</code></pre>
+<div class="widget widget-pcontrol" data-widget="pcontrol"></div><aside class="notes">Dos líneas. Movamos la ganancia: si es muy pequeña, el robot llega tarde; si es muy grande, se pasa de largo
+y oscila, porque la cámara siempre ve la cara con un fotograma de retraso. Encontrar el valor es cuestión de
+probar, y probar en vivo es justo lo que Micropython nos permite.</aside></section>
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Reto 5: IA" data-fx="neural" id="los-limites">
+<h3>Los <strong>límites</strong></h3>
+<ul class="simple">
+<li class="fragment"><p>🧠 <strong>Memoria</strong>: modelos de pocos megas, imágenes pequeñas.</p></li>
+<li class="fragment"><p>🛜 <strong>Red</strong>: sin WiFi, solo queda la IA local.</p></li>
+<li class="fragment"><p>🔋 <strong>Batería</strong>: la WiFi y los servos son lo que más consume.</p></li>
+<li class="fragment"><p>🔐 <strong>Secretos</strong>: las claves viven en el robot, no en el código.</p></li>
+</ul>
+<aside class="notes">No todo es magia. Tenemos megas, no gigas, de memoria. Sin red no hay modelo grande. La WiFi y los servos se
+comen la batería. Y si nuestro robot llama a una API, sus claves tienen que estar protegidas.</aside></section>
+</section>
+<section >
+<section data-scene="neon" data-background-color="#FF4F9A" data-transition="zoom" id="demostracion-completa">
+<h2>Demostración <strong>completa</strong></h2>
+<p><strong>Todo junto</strong>, en Stack-chan</p>
+<div class="stackchan-3d" data-mode="peek" style="height: 560px"><canvas></canvas><div class="sc3d-labels"></div><div class="sc3d-controls"></div></div><aside class="notes">Hemos superado los cinco retos. Ahora vamos a juntarlo todo.</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Demo final" id="demo-a-bailar">
+<h3>Demo: ¡a <strong>bailar</strong>!</h3>
+
+<div class="micropython-demo" data-demo="demo12_final" data-steps="22-29|31-34|35-39">
+  <pre class="demo-source" style="display: none"># Grand finale: dances from the stackchan-micropython port
+import sys
+import time
+import M5
+import m5ui
+import lvgl as lv
+
+sys.path.insert(0, &quot;/flash/libs&quot;)      # our port first: UIFlow ships its own stackchan
+for name in [m for m in sys.modules if m.split(&quot;.&quot;)[0] == &quot;stackchan&quot;]:
+    del sys.modules[name]                # ...and forget it if it was already imported
+from stackchan import get_stackchan
+from stackchan.hal import get_hal
+from stackchan.motion import create_default_motion
+from stackchan.skin_default import DefaultAvatar
+from stackchan import modifiers as mod
+from stackchan import animation as anim
+
+M5.begin()
+M5.Widgets.setRotation(1)     # landscape, like the firmware
+m5ui.init()
+m5ui.M5Page(bg_c=0x000000).screen_load()
+get_hal().init()
+
+chan = get_stackchan()
+chan.attach_motion(create_default_motion())
+face = DefaultAvatar()
+face.init(lv.screen_active())
+chan.attach_avatar(face)
+chan.add_modifier(mod.BlinkModifier())
+chan.add_modifier(mod.HeadPetModifier())     # pet me!
+chan.add_modifier(mod.ImuEventModifier())    # shake me!
+
+for title, dance in ((&quot;Happy!&quot;, anim.DANCE_HAPPY), (&quot;Robot!&quot;, anim.DANCE_ROBOT),
+                     (&quot;Panic!!&quot;, anim.DANCE_PANIC)):
+    chan.add_modifier(mod.TimedSpeechModifier(title, 2000))
+    dance_id = chan.add_modifier(mod.DanceModifier(dance))
+    while chan.get_modifier(dance_id) is not None:
+        M5.update()
+        get_hal().update()
+        chan.update()
+        time.sleep_ms(10)</pre>
+  <span class="fragment code-step" data-step="0"></span><span class="fragment code-step" data-step="1"></span><span class="fragment code-step" data-step="2"></span>
+  <div class="demo-toolbar">
+    <span class="demo-name">demo12_final</span>
+    <span class="status-indicator" title="Desconectado"></span>
+    <select class="demo-target" aria-label="Destino">
+      <option value="serial">Robot (USB)</option>
+      <option value="simulator">Simulador</option>
+    </select>
+    <button class="connect">Conectar</button>
+    <button class="send" disabled>Ejecutar</button>
+    <button class="stop" disabled>Parar</button>
+    <button class="restart" disabled>Reiniciar</button>
+    <span class="spacer"></span>
+    <button class="font-down" aria-label="Reducir fuente">A-</button>
+    <button class="font-up" aria-label="Aumentar fuente">A+</button>
+    <button class="toggle-video" aria-label="Alternar cámara y simulador">Cámara</button>
+  </div>
+  <div class="demo-body" style="height: 580px">
+    <div class="editor"></div>
+    <div class="resizer"></div>
+    <pre class="terminal"></pre>
+  </div>
+</div>
+<aside class="notes">Esta demo usa el port completo del firmware: el avatar con su cara, los servos con física de muelles, los LEDs,
+y los modificadores. Mientras baila, podéis acariciarle la cabeza o agitarlo, y reaccionará. (Ejecutar.)</aside></section>
+</section>
+<section >
+<section data-scene="face" data-background-color="#000000" data-transition="fade" id="muchas-gracias">
+<h2>¡Muchas <strong>gracias</strong>!</h2>
+
+<div class="sc-face hero" data-emotion="happy" aria-hidden="true">
+  <div class="sc-cheek left"></div><div class="sc-cheek right"></div>
+  <div class="sc-eye left"><div class="sc-lid"></div></div>
+  <div class="sc-eye right"><div class="sc-lid"></div></div>
+  <div class="sc-mouth"></div>
+</div>
+<aside class="notes">¡Hasta aquí la presentación! Espero que la próxima vez que alguien pregunte para qué sirve Micropython, tengáis
+un robot que responda por vosotros. Muchas gracias. Stack-chan también os da las gracias.</aside></section>
+</section>
+<section >
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Recursos" data-transition="fade" id="recursos">
+<h2>Recursos</h2>
+<ul class="simple">
+<li class="fragment"><p>🌐 <strong>Micropython</strong>: <a class="reference external" href="https://micropython.org">https://micropython.org</a></p></li>
+<li class="fragment"><p>🤖 <strong>Stack-chan</strong>: <a class="reference external" href="https://github.com/stack-chan">https://github.com/stack-chan</a></p></li>
+<li class="fragment"><p>📦 <strong>UIFlow 2</strong>: <a class="reference external" href="https://uiflow2.m5stack.com">https://uiflow2.m5stack.com</a></p></li>
+<li class="fragment"><p>📝 <strong>Editor online</strong>: <a class="reference external" href="https://viper-ide.org">https://viper-ide.org</a></p></li>
+</ul>
+<aside class="notes">Os dejo aquí los recursos para empezar a programar robots con Micropython.</aside></section>
+</section>
+<section >
+<section data-scene="sheet" data-background-color="#E9EEF2" data-sheet="Presentación" data-transition="fade" id="qr">
+<h2>QR</h2>
+<a class="qr reference internal image-reference" href="_images/qr.svg"><img alt="_images/qr.svg" class="align-center qr" src="_images/qr.svg" style="width: 40%;" />
+</a>
+<aside class="notes">Y por supuesto, tenéis esta misma presentación, con todas las demos, en el código QR.</aside></section>
+</section>
+<section >
+<section data-scene="neon" data-background-color="#FF4F9A" data-transition="fade" id="python-malaga">
+<h2>Python <strong>Málaga</strong></h2>
+<div class="stackchan-3d" data-mode="peek" style="height: 560px"><canvas></canvas><div class="sc3d-labels"></div><div class="sc3d-controls"></div></div><ul class="simple">
+<li><p>🌐 <strong>Sitio web:</strong> <a class="reference external" href="https://www.python-malaga.es/">python-malaga.es</a>.</p></li>
+<li><p>🤝 <strong>Meetup:</strong> <a class="reference external" href="https://www.meetup.com/Python-Malaga/">meetup.com/Python-Malaga</a>.</p></li>
+<li><p>🐦 <strong>Twitter:</strong> <a class="reference external" href="https://twitter.com/python_malaga">&#64;python_malaga</a>.</p></li>
+<li><p>‍💼 <strong>LinkedIn:</strong> <a class="reference external" href="https://www.linkedin.com/groups/13110576/">linkedin.com/groups/13110576</a>.</p></li>
+<li><p>📱 <strong>Telegram:</strong> <a class="reference external" href="https://t.me/python_malaga">python_malaga</a>.</p></li>
+</ul>
+<aside class="notes">Y para más charlas y talleres como este, uníos a la comunidad de Python Málaga. No olvidéis seguirnos en
+nuestras redes sociales y en nuestro grupo de Telegram.</aside></section>
+<section data-scene="blueprint" data-background-color="#1F2A44" data-sheet="Contacto" data-transition="fade" id="contactar">
+<h3><strong>Contactar</strong></h3>
+<div class="contact-cols docutils container">
+<div class="docutils container">
+<ul class="simple">
+<li><p>🌐 <strong>Sitio web:</strong> <a class="reference external" href="https://nekmo.com">nekmo.com</a></p></li>
+<li><p>📫 <strong>Email:</strong> <a class="reference external" href="mailto:contacto&#37;&#52;&#48;nekmo&#46;com">contacto<span>&#64;</span>nekmo<span>&#46;</span>com</a></p></li>
+<li><p>🐦 <strong>Twitter:</strong> <a class="reference external" href="https://twitter.com/nekmocom">&#64;nekmocom</a></p></li>
+<li><p>📱 <strong>Telegram:</strong> <a class="reference external" href="https://t.me/nekmo">&#64;nekmo</a></p></li>
+<li><p>💡 <strong>Jabber:</strong> <a class="reference external" href="xmpp://nekmo&#64;nekmo.org">nekmo&#64;nekmo.org</a></p></li>
+</ul>
+</div>
+<div class="screen-robot" data-mode="mail" aria-hidden="true"><div class="intro-head"><div class="intro-screen"><canvas width="320" height="240"></canvas></div><div class="intro-camera"></div></div><div class="intro-base"></div></div></div>
+<aside class="notes">A cualquier cosa, tenéis mi contacto disponible. ¿Preguntas?</aside></section>
+</section>
+
+        </div>
+    </div>
+    
+    <script src="_static/revealjs/dist/reveal.js"></script>
+    
+    
+      <script src="_static/revealjs/plugin/notes/notes.js"></script>
+      <script src="_static/revealjs/plugin/highlight/highlight.js"></script>
+      
+    
+    <script>
+        var revealjsConfig = new Object();
+        Object.assign(revealjsConfig, {"controls": true, "progress": true, "history": true, "hash": true, "center": true, "width": 1280, "height": 800, "margin": 0.06, "transition": "slide", "backgroundTransition": "fade", "scrollActivationWidth": null});
+        
+        
+        
+          revealjsConfig.plugins = [
+            RevealNotes,RevealHighlight,
+          ];
+        
+        // More info https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize(revealjsConfig);
+    </script>
+
+  </body>
+</html>
