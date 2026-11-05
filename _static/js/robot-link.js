@@ -49,8 +49,12 @@
             encoder.readable.pipeTo(this.port.writable).catch(() => {});
             this.writer = encoder.writable.getWriter();
             this.readLoop();
-            // Interrupt whatever main.py is doing (UIFlow boots into it)
-            await this.write("\r\x03\x03");
+            // Interrupt whatever main.py is doing (UIFlow boots into it), and
+            // stop its LVGL loop: its timer outlives main.py and, while a demo
+            // blocks (camera, microphone), fills the schedule queue
+            await this.run(STOP_LVGL);
+            await delay(400);
+            await this.write("\x02");         // back to the friendly REPL
             this.events.emit("output", "Conectado al Stack-chan por USB\n");
         }
 
@@ -94,12 +98,17 @@
             await this.write("\x04");          // execute
         }
 
+        // Stop the program and let the servos go (torque off), in case a
+        // previous run left them holding a pose
         async stop() {
-            await this.write("\r\x03\x03\x02");
+            await this.run(RELEASE_SERVOS);
+            await delay(250);
+            await this.write("\x02");         // back to the friendly REPL
+            this.events.emit("output", "Servos liberados\n");
         }
 
         async restart() {
-            await this.run("import machine\nmachine.reset()\n");
+            await this.run(RELEASE_SERVOS + "import machine\nmachine.reset()\n");
             this.events.emit("output", "Reiniciando el robot...\n");
             await delay(300);
             await this.disconnect();
@@ -120,11 +129,36 @@
         }
     }
 
+    // UIFlow's LVGL event loop (m5ui), started by the robot's main.py
+    const STOP_LVGL = [
+        "try:",
+        "    import m5ui",
+        "    if m5ui.event_loop.is_initialized():",
+        "        m5ui.deinit()",
+        "except Exception:",
+        "    pass",
+        "",
+    ].join("\n");
+
+    // Torque off on Stack-chan's two bus servos (Feetech SCS on UART1, IDs
+    // 1 and 2): WRITE register 40 = 0. Plain UART, no robot library.
+    const RELEASE_SERVOS = [
+        "from machine import UART",
+        "_u = UART(1, baudrate=1000000, tx=6, rx=7)",
+        "for _id in (1, 2):",
+        "    _b = bytes([_id, 4, 3, 40, 0])",
+        "    _u.write(b'\\xff\\xff' + _b + bytes([~sum(_b) & 255]))",
+        "",
+    ].join("\n");
+
     // Load the in-browser simulator (ES module) on demand
-    const SIMULATOR_URL = new URL("../sim/simulator.mjs", document.currentScript.src).href;
+    // Versioned by the build (js/model-version.js), like the 3D model
+    const SIMULATOR_URL = new URL("../sim/simulator.mjs", document.currentScript.src);
     let simulatorPromise = null;
-    window.loadSimulator = () => (simulatorPromise = simulatorPromise ||
-        import(SIMULATOR_URL).then((module) => module.simulator));
+    window.loadSimulator = () => (simulatorPromise = simulatorPromise || (() => {
+        SIMULATOR_URL.search = "v=" + (window.STACKCHAN_SIM_VERSION || "dev");
+        return import(SIMULATOR_URL.href).then((module) => module.simulator);
+    })());
 
     class SimulatorLink {
         constructor(events) {

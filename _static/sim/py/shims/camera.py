@@ -70,9 +70,17 @@ def deinit():
     pass
 
 
+_frame = None
+
+
 def snapshot():
+    # One frame buffer for the whole program, like the camera driver: a new
+    # 150 KB image per frame fragments the small WebAssembly heap
+    global _frame
     _bridge_mod.get().maybe_tick()
-    img = Image(320, 240)
+    if _frame is None:
+        _frame = Image(320, 240)
+    img = _frame
     if not _bridge_mod.get().camera_frame(img._buf):
         img.draw_string(64, 112, "Activa la camara", 0xFFFFFF)
     return img

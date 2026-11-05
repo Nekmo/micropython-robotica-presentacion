@@ -16,15 +16,6 @@ function makeBuffer(bytes) {
     return SHARED ? new SharedArrayBuffer(bytes) : new ArrayBuffer(bytes);
 }
 
-// The simulated /flash gets a secrets.py so network demos run; the API key
-// (optional, set in the camera settings) never leaves this browser.
-function defaultFiles() {
-    const key = localStorage.getItem("anthropicKey") || "";
-    return {
-        "secrets.py": `WIFI_SSID = "PyConES"\nWIFI_PASSWORD = ""\nANTHROPIC_API_KEY = ${JSON.stringify(key)}\n`,
-    };
-}
-
 class Simulator {
     constructor() {
         this.handlers = {};
@@ -65,15 +56,33 @@ class Simulator {
         this.control[IDX.TOUCH] = down ? 1 : 0;
     }
 
-    setHead(zone, down) { this.control[IDX.HEAD0 + zone] = down ? 1 : 0; }
+    // Inputs are also announced ("input" event) so the 3D robot shows them
+    // even when no program is reading the sensors
+    inputs() {
+        const c = this.control;
+        return {
+            head: [c[IDX.HEAD0], c[IDX.HEAD1], c[IDX.HEAD2]],
+            accel: [c[IDX.AX] / 1000, c[IDX.AY] / 1000, c[IDX.AZ] / 1000],
+            prox: c[IDX.PROX],
+        };
+    }
+
+    setHead(zone, down) {
+        this.control[IDX.HEAD0 + zone] = down ? 1 : 0;
+        this.emit("input", this.inputs());
+    }
 
     setAccel(ax, ay, az = 1) {
         this.control[IDX.AX] = Math.round(ax * 1000);
         this.control[IDX.AY] = Math.round(ay * 1000);
         this.control[IDX.AZ] = Math.round(az * 1000);
+        this.emit("input", this.inputs());
     }
 
-    setProximity(value) { this.control[IDX.PROX] = Math.round(value); }
+    setProximity(value) {
+        this.control[IDX.PROX] = Math.round(value);
+        this.emit("input", this.inputs());
+    }
 
     setLight(lux) { this.control[IDX.LUX] = Math.round(lux * 1000); }
 
@@ -217,17 +226,16 @@ class Simulator {
 
     // ---- lifecycle ----
     run(code, files = {}) {
-        files = Object.assign(defaultFiles(), files);
         this.stop(true);
         this.resetInputsKeepingSensors();
-        const worker = new Worker(new URL("sim-worker.js", BASE), {type: "module"});
+        const worker = new Worker(new URL("sim-worker.js" + new URL(import.meta.url).search, BASE), {type: "module"});
         this.worker = worker;
         this.running = true;
         worker.onmessage = (e) => this.onWorkerMessage(e.data);
         worker.onerror = (e) => this.emit("stdout", `[simulador] ${e.message}\n`);
         worker.postMessage({
             t: "run", code, files,
-            bundleUrl: new URL("bundle.json", BASE).href,
+            bundleUrl: new URL("bundle.json" + new URL(import.meta.url).search, BASE).href,
             control: this.control.buffer, mic: this.micRing.buffer, camera: this.camera.buffer,
         });
         if (!this.shared) {

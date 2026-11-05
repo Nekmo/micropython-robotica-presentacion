@@ -151,8 +151,10 @@
                     s.rings.push({x: pointer.x, y: pointer.y, born: now});
                     s.last = now;
                 }
-                if (now - s.last > 1400) {    // idle: the robot "senses" on its own
-                    s.rings.push({x: w * 0.8, y: h * 0.7, born: now});
+                if (now - pointer.moved > 1500 && now - s.last > 450) {
+                    // idle: touches all over the screen, now and then a strong one
+                    s.rings.push({x: Math.random() * w, y: Math.random() * h, born: now,
+                        strong: Math.random() < 0.2});
                     s.last = now;
                 }
                 s.rings = s.rings.filter((ring) => now - ring.born < 2200);
@@ -208,8 +210,14 @@
             draw(ctx, w, h, t, s, c) {
                 const size = 22;
                 const now = performance.now();
-                if (now - pointer.moved < 100) {
-                    const gx = Math.floor(pointer.x / size), gy = Math.floor(pointer.y / size);
+                // idle: an invisible brush wanders around painting on its own
+                const idle = now - pointer.moved > 1500;
+                const brush = idle ? {
+                    x: w * (0.5 + 0.42 * Math.sin(t / 1900) * Math.cos(t / 3100)),
+                    y: h * (0.5 + 0.4 * Math.sin(t / 1300 + 1)),
+                } : pointer;
+                if (idle || now - pointer.moved < 100) {
+                    const gx = Math.floor(brush.x / size), gy = Math.floor(brush.y / size);
                     for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
                         s.cells.set(`${gx + dx},${gy + dy}`, now - (Math.abs(dx) + Math.abs(dy)) * 120);
                     }
@@ -233,48 +241,78 @@
         },
 
         neural: {
+            // An organic mesh of neurons, bigger than the right margin so it
+            // bleeds off the slide: scattered nodes, each wired to its nearest
+            // neighbours; signals hop from node to node
             init(w, h) {
-                const layers = [4, 6, 6, 3];
+                let seed = 7;                      // same layout on every visit
+                const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
                 const nodes = [];
-                layers.forEach((count, li) => {
-                    for (let i = 0; i < count; i++) {
-                        nodes.push({layer: li, x: w * (0.8 + li * 0.05), y: h * (0.22 + (i + 0.5) * 0.6 / count), fire: 0});
+                for (let tries = 0; nodes.length < 46 && tries < 4000; tries++) {
+                    const x = w * (0.6 + rnd() * 0.62), y = h * (-0.18 + rnd() * 1.36);
+                    if (nodes.every((n) => Math.hypot(n.x - x, n.y - y) > Math.min(w, h) * 0.085)) {
+                        nodes.push({x, y, r: 7 + rnd() * 13, phase: rnd() * 6.3, fire: 0, links: []});
                     }
-                });
+                }
                 const edges = [];
-                nodes.forEach((a) => nodes.forEach((b) => { if (b.layer === a.layer + 1) edges.push([a, b]); }));
+                nodes.forEach((a) => {
+                    const near = nodes.filter((b) => b !== a)
+                        .sort((p, q) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(q.x - a.x, q.y - a.y))
+                        .slice(0, 2 + Math.floor(rnd() * 3));
+                    near.forEach((b) => {
+                        if (!edges.some(([p, q]) => (p === a && q === b) || (p === b && q === a))) {
+                            edges.push([a, b]);
+                            a.links.push(b);
+                            b.links.push(a);
+                        }
+                    });
+                });
                 return {nodes, edges, pulses: [], last: 0};
             },
             draw(ctx, w, h, t, s, c) {
                 const now = performance.now();
-                if (now - s.last > 260) {
-                    const edge = s.edges[Math.floor(Math.random() * s.edges.length)];
-                    if (edge[0].layer === 0 || edge[0].fire > 0.3) s.pulses.push({edge, born: now});
+                // nodes drift a little, like something alive
+                const pos = (n) => [n.x + Math.sin(t / 2300 + n.phase) * 6, n.y + Math.cos(t / 2900 + n.phase) * 6];
+                if (now - s.last > 220) {          // a new signal starts somewhere
+                    const from = s.nodes[Math.floor(Math.random() * s.nodes.length)];
+                    const to = from.links[Math.floor(Math.random() * from.links.length)];
+                    if (to) s.pulses.push({from, to, born: now, hops: 3});
                     s.last = now;
                 }
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 1.5;
                 ctx.strokeStyle = `rgba(${c.line}, ${c.soft * 0.8})`;
                 s.edges.forEach(([a, b]) => {
+                    const [ax, ay] = pos(a), [bx, by] = pos(b);
                     ctx.beginPath();
-                    ctx.moveTo(a.x, a.y);
-                    ctx.lineTo(b.x, b.y);
+                    ctx.moveTo(ax, ay);
+                    ctx.lineTo(bx, by);
                     ctx.stroke();
                 });
+                const born = [];
                 s.pulses = s.pulses.filter((p) => {
-                    const k = (now - p.born) / 700;
-                    if (k >= 1) { p.edge[1].fire = 1; return false; }
-                    const [a, b] = p.edge;
+                    const k = (now - p.born) / 650;
+                    if (k >= 1) {                  // arrived: light the node, maybe hop on
+                        p.to.fire = 1;
+                        const next = p.to.links.filter((n) => n !== p.from);
+                        if (p.hops > 0 && next.length) {
+                            born.push({from: p.to, to: next[Math.floor(Math.random() * next.length)], born: now, hops: p.hops - 1});
+                        }
+                        return false;
+                    }
+                    const [ax, ay] = pos(p.from), [bx, by] = pos(p.to);
                     ctx.fillStyle = `rgba(${c.accent}, 0.9)`;
                     ctx.beginPath();
-                    ctx.arc(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k, 4, 0, Math.PI * 2);
+                    ctx.arc(ax + (bx - ax) * k, ay + (by - ay) * k, 6, 0, Math.PI * 2);
                     ctx.fill();
                     return true;
                 });
+                s.pulses.push(...born);
                 s.nodes.forEach((n) => {
-                    if (Math.hypot(pointer.x - n.x, pointer.y - n.y) < 70) n.fire = 1;
+                    const [x, y] = pos(n);
+                    if (Math.hypot(pointer.x - x, pointer.y - y) < 90) n.fire = 1;
                     n.fire *= 0.95;
                     ctx.beginPath();
-                    ctx.arc(n.x, n.y, 9 + n.fire * 6, 0, Math.PI * 2);
+                    ctx.arc(x, y, n.r + n.fire * 8, 0, Math.PI * 2);
                     ctx.fillStyle = n.fire > 0.05 ? `rgba(${c.accent}, ${0.25 + n.fire * 0.6})` : `rgba(${c.line}, ${c.soft})`;
                     ctx.fill();
                 });

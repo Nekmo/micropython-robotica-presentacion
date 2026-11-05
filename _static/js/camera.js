@@ -28,13 +28,11 @@
                 <video class="cam-live" autoplay muted playsinline></video>
                 <div class="cam-sim">
                   <div class="sim-controls" aria-label="Sensores del simulador">
-                    <span class="sim-group">Cabeza
-                      <button data-head="0">Delante</button><button data-head="1">Centro</button><button data-head="2">Detrás</button>
-                    </span>
                     <button class="sim-shake">Agitar</button>
                     <label>Inclinar <input type="range" class="sim-tilt" min="-1" max="1" step="0.05" value="0"></label>
                     <label>Proximidad <input type="range" class="sim-prox" min="0" max="2047" step="1" value="0"></label>
                     <button class="sim-mic" aria-pressed="false">Micrófono</button>
+                    <span class="sim-hint"></span>
                   </div>
                 </div>
                 <p class="cam-empty">Activa la cámara en el panel de ajustes</p>
@@ -51,7 +49,6 @@
                   </select></label>
                   <label><input type="checkbox" class="cam-mirror"> Espejo</label>
                   <label>Zoom <input type="range" class="cam-zoom" min="1" max="3" step="0.1" value="1"></label>
-                  <label>Clave API (simulador) <input type="password" class="cam-api-key" autocomplete="off" placeholder="sk-ant-..."></label>
                 </div>
               </div>`);
             this.box = document.getElementById("camera-box");
@@ -69,9 +66,6 @@
             q(".cam-source").addEventListener("change", (e) => this.setSource(e.target.value));
             q(".cam-mirror").addEventListener("change", (e) => this.box.classList.toggle("mirror", e.target.checked));
             q(".cam-zoom").addEventListener("input", (e) => this.box.style.setProperty("--zoom", e.target.value));
-            q(".cam-api-key").value = localStorage.getItem("anthropicKey") || "";
-            q(".cam-api-key").addEventListener("change", (e) => localStorage.setItem("anthropicKey", e.target.value.trim()));
-            q(".cam-api-key").addEventListener("keydown", (e) => e.stopPropagation());
             this.setupSimulatorControls();
             this.makeDraggable();
             this.updateBadge();
@@ -157,14 +151,19 @@
             const panel = this.box.querySelector(".sim-controls");
             const withSim = (fn) => window.loadSimulator().then(fn);
             panel.addEventListener("pointerdown", (e) => e.stopPropagation());
-            panel.addEventListener("keydown", (e) => e.stopPropagation());
-            panel.querySelectorAll("[data-head]").forEach((button) => {
-                const zone = +button.dataset.head;
-                const set = (down) => withSim((sim) => sim.setHead(zone, down));
-                button.addEventListener("pointerdown", () => set(true));
-                button.addEventListener("pointerup", () => set(false));
-                button.addEventListener("pointerleave", () => set(false));
+            // The robot model shows every input, but only a running program reacts
+            const hint = panel.querySelector(".sim-hint");
+            withSim((sim) => {
+                const update = () => {
+                    hint.textContent = !sim.shared
+                        ? "Sin memoria compartida: recarga la página para que el programa reciba los sensores."
+                        : (sim.running ? "Toca la parte de arriba de la cabeza para usar el sensor táctil."
+                            : "Ejecuta una demo en el simulador para que reaccione.");
+                };
+                sim.on("status", update);
+                update();
             });
+            panel.addEventListener("keydown", (e) => e.stopPropagation());
             panel.querySelector(".sim-shake").addEventListener("click", () => withSim((sim) => sim.shake()));
             panel.querySelector(".sim-tilt").addEventListener("input", (e) => withSim((sim) => sim.setAccel(+e.target.value, 0)));
             panel.querySelector(".sim-prox").addEventListener("input", (e) => withSim((sim) => sim.setProximity(+e.target.value)));

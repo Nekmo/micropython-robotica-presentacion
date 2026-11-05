@@ -7,10 +7,11 @@ HAL init -> motion init -> install apps -> main loop.
 import sys
 import time
 
-if '/flash/libs' not in sys.path:
-    sys.path.append('/flash/libs')
-if 'libs' not in sys.path:
-    sys.path.append('libs')
+# The port goes first: UIFlow ships its own (different) /system/stackchan
+for _path in ('libs', '/flash/libs'):
+    if _path in sys.path:
+        sys.path.remove(_path)
+    sys.path.insert(0, _path)
 
 import M5
 import m5ui  # noqa: F401  (initialises LVGL glue on UIFlow)

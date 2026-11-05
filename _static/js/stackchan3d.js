@@ -5,9 +5,10 @@
  *
  * Modes (``.. stackchan-3d:: :mode:``):
  *   anatomy  slowly orbits, with labels on each component
- *   servos   yaw/pitch sliders + live equivalent MicroPython code
  *   mirror   follows the in-browser simulator (servos, LEDs and screen)
  *   board    an ESP32-S3 development board with labelled parts
+ *   servo    a hobby servo seen through its case (labelled parts), then
+ *            a PWM demo and a serial bus servo (UART) answering packets
  *   peek     section slides: Stack-chan jumps in from the bottom of the
  *            screen, wakes up, looks at the title and then follows the
  *            pointer; a click makes it happy
@@ -122,10 +123,14 @@
 
         // Touch zones are a print on the top face: draw them over the shell
         // without z-fighting instead of as raised panels
+        const touches = [], touchMeshes = [];
         for (let i = 0; i < 3; i++) {
             const zone = node("touch_" + i);
+            zone.userData.touchZone = i;
+            touchMeshes.push(zone);
             zone.material = zone.material.clone();
             Object.assign(zone.material, {polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1});
+            touches.push(zone.material);
         }
 
         const leds = [];
@@ -160,7 +165,7 @@
                 box.min.x + (box.max.x - box.min.x) * 0.3, box.min.y + (box.max.y - box.min.y) * 0.55, box.max.z)),
             yaw: anchorAt("body", side(0.4)),
         };
-        return {robot, yaw: node("yaw"), pitch: node("pitch"), leds, anchors};
+        return {robot, yaw: node("yaw"), pitch: node("pitch"), leds, touches, touchMeshes, anchors};
     }
 
     const LABELS = {
@@ -309,6 +314,175 @@
         return {robot, anchors};
     }
 
+
+    // ---------------------------------------------------------------- servos
+    //
+    // A micro hobby servo (SG90-like, 1 unit = 10 mm) with a see-through
+    // case, and a serial bus servo (Feetech SCS0009-like) for the UART demo.
+
+    const SERVO_LABELS = {
+        motor: "🌀 Motor",
+        gears: "⚙️ Reductora",
+        pot: "📏 Sensor de posición",
+        pcb: "🧠 Circuito de control",
+    };
+    const SERVO_SIDE = {motor: "left", gears: "left", pot: "right", pcb: "right"};
+    const SERVO_PARTS = Object.keys(SERVO_LABELS).length;
+
+    function labelTexture(THREE, lines) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 512;
+        canvas.height = 256;
+        const c = canvas.getContext("2d");
+        c.fillStyle = "#16181d";
+        c.fillRect(0, 0, 512, 256);
+        c.fillStyle = "#e9eef2";
+        c.textAlign = "center";
+        c.font = "800 78px 'JetBrains Mono', monospace";
+        c.fillText(lines[0], 256, 118);
+        c.font = "600 50px 'JetBrains Mono', monospace";
+        c.fillStyle = "#39d0d8";
+        c.fillText(lines[1], 256, 196);
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        return texture;
+    }
+
+    function buildServos(THREE) {
+        const mat = (color, extra = {}) => new THREE.MeshStandardMaterial(Object.assign({color, roughness: 0.55}, extra));
+        const add = (parent, geometry, material, x, y, z) => {
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x, y, z);
+            parent.add(mesh);
+            return mesh;
+        };
+        const boxG = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+        const cylG = (r, h, n = 32) => new THREE.CylinderGeometry(r, r, h, n);
+        const ghost = (mesh) => { mesh.raycast = () => {}; return mesh; };   // labels see through it
+
+        const white = mat(0xf2f2ee, {roughness: 0.45});
+        const metal = mat(0xc7ccd3, {metalness: 0.8, roughness: 0.3});
+        const dark = mat(0x22252b);
+        const wires = [mat(0x6b3b22), mat(0xd23b3b), mat(0xf29b30)];   // GND, V+, signal
+
+        const robot = new THREE.Group();
+        const gear = (parent, r, h, teeth, x, y, z, material = white) => {
+            const g = new THREE.Group();
+            g.position.set(x, y, z);
+            add(g, cylG(r, h), material, 0, 0, 0);
+            for (let i = 0; i < teeth; i++) {
+                const a = i / teeth * Math.PI * 2;
+                const t = add(g, boxG(0.07, h, 0.07), material, Math.cos(a) * r, 0, Math.sin(a) * r);
+                t.rotation.y = -a;
+            }
+            parent.add(g);
+            return g;
+        };
+        const cable = (from, to, bend, material, radius = 0.045) => {
+            const curve = new THREE.CatmullRomCurve3([from, from.clone().add(bend), to.clone().sub(bend), to]);
+            const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, radius, 10), material);
+            mesh.raycast = () => {};
+            return {mesh, curve};
+        };
+
+        // ---- hobby servo (PWM): blue see-through case and its insides
+        const pwm = new THREE.Group();
+        pwm.position.y = 0.45;
+        robot.add(pwm);
+        const shell = mat(0x2f6fd6, {transparent: true, opacity: 0.2, depthWrite: false, roughness: 0.3});
+        const edge = new THREE.LineBasicMaterial({color: 0x2f6fd6, transparent: true, opacity: 0.55});
+        const casePart = (w, h, d, x, y, z) => {
+            const mesh = ghost(add(pwm, boxG(w, h, d), shell, x, y, z));
+            const lines = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), edge);
+            lines.raycast = () => {};
+            mesh.add(lines);
+        };
+        casePart(2.3, 2.0, 1.2, 0, 1.0, 0);          // body
+        casePart(3.2, 0.12, 1.2, 0, 1.55, 0);        // mounting ears
+        casePart(1.3, 0.42, 1.2, 0.5, 2.21, 0);      // top cap over the gear train
+
+        const motor = add(pwm, cylG(0.42, 1.25), metal, -0.45, 0.8, 0);
+        add(pwm, cylG(0.1, 0.2, 16), metal, -0.45, 1.52, 0);
+        const gears = new THREE.Group();
+        pwm.add(gears);
+        const g1 = gear(gears, 0.22, 0.12, 10, -0.45, 1.7, 0);
+        const g2 = gear(gears, 0.42, 0.1, 18, 0.05, 1.9, 0);
+        const g3 = gear(gears, 0.3, 0.12, 14, 0.5, 2.1, 0.08);
+        const pot = add(pwm, cylG(0.3, 0.55), dark, 0.5, 1.0, 0);
+        add(pwm, cylG(0.12, 0.3, 16), metal, 0.5, 1.4, 0);
+        const pcb = add(pwm, boxG(2.0, 0.06, 1.0), mat(0x1f7a4a), 0, 0.12, 0);
+        add(pwm, boxG(0.4, 0.08, 0.4), dark, 0.35, 0.19, 0);
+        // output shaft and horn
+        const pwmShaft = new THREE.Group();
+        pwmShaft.position.set(0.5, 2.42, 0);
+        pwm.add(pwmShaft);
+        add(pwmShaft, cylG(0.16, 0.3), white, 0, 0.1, 0);
+        const arm = add(pwmShaft, boxG(1.9, 0.08, 0.26), white, 0.5, 0.27, 0);
+        add(pwmShaft, cylG(0.2, 0.08), white, 0, 0.27, 0);
+        add(pwmShaft, cylG(0.13, 0.08), white, 1.45, 0.27, 0);
+        // three wires out of the side, towards the microcontroller
+        const pwmWires = wires.map((m, i) => {
+            const z = (i - 1) * 0.1;
+            const c = cable(new THREE.Vector3(-1.15, 0.35, z), new THREE.Vector3(-4.6, -0.6, z), new THREE.Vector3(-0.9, 0, 0), m);
+            pwm.add(c.mesh);
+            return c;
+        });
+
+        // ---- serial bus servo (UART): black, labelled, two connectors
+        const bus = new THREE.Group();
+        bus.position.y = 0.45;
+        bus.scale.setScalar(0.001);
+        robot.add(bus);
+        const black = mat(0x1a1c21, {roughness: 0.4});
+        const faces = Array(6).fill(black);
+        faces[4] = new THREE.MeshStandardMaterial({map: labelTexture(THREE, ["SCS0009", "ID 1  ·  UART"]), roughness: 0.4});
+        add(bus, boxG(2.3, 2.0, 1.2), faces, 0, 1.0, 0);
+        add(bus, boxG(3.2, 0.12, 1.2), black, 0, 1.55, 0);
+        add(bus, boxG(1.3, 0.42, 1.2), black, 0.5, 2.21, 0);
+        const busShaft = new THREE.Group();
+        busShaft.position.set(0.5, 2.42, 0);
+        bus.add(busShaft);
+        add(busShaft, cylG(0.62, 0.1, 48), metal, 0, 0.1, 0);
+        add(busShaft, boxG(0.9, 0.04, 0.12), dark, 0.3, 0.17, 0);   // index mark: shows the angle
+        [[-1.18, -0.3], [-1.18, 0.3]].forEach(([x, z]) => add(bus, boxG(0.12, 0.3, 0.42), white, x, 0.4, z));
+        const busIn = cable(new THREE.Vector3(-1.24, 0.4, -0.3), new THREE.Vector3(-4.6, -0.6, -0.3),
+            new THREE.Vector3(-0.9, 0, 0), mat(0x30343c), 0.07);
+        const busNext = cable(new THREE.Vector3(-1.24, 0.4, 0.3), new THREE.Vector3(-2.6, -0.6, 2.2),
+            new THREE.Vector3(-0.5, 0, 0.5), mat(0x30343c, {transparent: true, opacity: 0.45}), 0.07);
+        bus.add(busIn.mesh, busNext.mesh);
+
+        // data travelling on the wires
+        const pulse = (color) => {
+            const m = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 10),
+                new THREE.MeshBasicMaterial({color}));
+            m.raycast = () => {};
+            m.visible = false;
+            robot.add(m);
+            return m;
+        };
+        const pulses = {
+            pwm: Array.from({length: 4}, () => pulse(0xff4f9a)),
+            out: Array.from({length: 8}, () => pulse(0xff4f9a)),
+            back: Array.from({length: 8}, () => pulse(0x39d0d8)),
+        };
+
+        const at = (node, x, y, z) => ({node, local: new THREE.Vector3(x, y, z)});
+        const anchors = {
+            motor: at(motor, -0.42, 0, 0),
+            gears: at(g2, 0, 0.05, 0.42),
+            pot: at(pot, 0.3, 0, 0),
+            pcb: at(pcb, 1.0, 0, 0),
+        };
+        return {robot, anchors, servo: {pwm, bus, pwmShaft, busShaft, gears: [g1, g2, g3], arm,
+            pwmCable: pwmWires[2], busIn, pulses}};
+    }
+
+    const hex = (bytes) => bytes.map((b) => b.toString(16).toUpperCase().padStart(2, "0"));
+    function scsPacket(id, instruction, params) {
+        const body = [id, params.length + 2, instruction, ...params];
+        return [0xFF, 0xFF, ...body, ~body.reduce((a, b) => a + b, 0) & 0xFF];
+    }
+
     class RobotScene {
         constructor(THREE, template, root) {
             this.THREE = THREE;
@@ -326,13 +500,21 @@
             this.current = {yaw: 0, pitch: 0};
             this.isBoard = this.mode === "board";
             this.isPeek = this.mode === "peek";
+            this.isServo = this.mode === "servo";
+
             this.lookAtY = MODEL_HEIGHT / 2;
             if (this.isPeek) {
                 // seen from the right, so at rest it is turned towards the title
                 this.orbit = {theta: 0.42, phi: 1.36, radius: 10.5};
                 this.lookAtY = MODEL_HEIGHT * 0.78;
             }
-            if (this.isBoard) {
+            if (this.isServo) {
+                Object.assign(this, buildServos(THREE));
+                this.labelDefs = SERVO_LABELS;
+                this.labelSide = SERVO_SIDE;
+                this.orbit = {theta: 0.5, phi: 1.2, radius: 10};
+                this.lookAtY = 1.2;
+            } else if (this.isBoard) {
                 Object.assign(this, buildBoard(THREE));
                 this.labelDefs = BOARD_LABELS;
                 this.labelSide = BOARD_SIDE;
@@ -373,11 +555,29 @@
             let last = null;
             this.canvas.addEventListener("pointerdown", (e) => {
                 e.stopPropagation();   // do not drag the camera box
+                // Mirror of the simulator: press the head's touch zones on the model
+                const zone = this.sim ? this.touchZoneAt(e) : -1;
+                if (zone >= 0) {
+                    this.pressed = zone;
+                    this.sim.setHead(zone, true);
+                    this.canvas.setPointerCapture(e.pointerId);
+                    return;
+                }
                 last = {x: e.clientX, y: e.clientY};
                 this.canvas.setPointerCapture(e.pointerId);
                 this.userOrbit = true;
             });
+            const release = () => {
+                if (this.pressed === undefined) return;
+                this.sim.setHead(this.pressed, false);
+                this.pressed = undefined;
+            };
+            this.canvas.addEventListener("pointerup", release);
+            this.canvas.addEventListener("pointercancel", release);
             this.canvas.addEventListener("pointermove", (e) => {
+                if (this.sim && !last && this.pressed === undefined) {
+                    this.canvas.style.cursor = this.touchZoneAt(e) >= 0 ? "pointer" : "";
+                }
                 if (!last) return;
                 this.orbit.theta -= (e.clientX - last.x) * 0.008;
                 this.orbit.phi = Math.max(0.4, Math.min(1.5, this.orbit.phi - (e.clientY - last.y) * 0.006));
@@ -392,7 +592,14 @@
 
         setupMode() {
             const controls = this.root.querySelector(".sc3d-controls");
-            if (this.mode === "anatomy" || this.isBoard) {
+            if (this.isServo) {   // protocol panel of the PWM and UART demos
+                this.panel = document.createElement("div");
+                this.panel.className = "servo-panel";
+                this.root.appendChild(this.panel);
+                this.servoState = {phase: -1, angle: 90, from: 90, to: 90, moveAt: 0, swap: 0};
+                this.panX = 0;
+            }
+            if (this.mode === "anatomy" || this.isBoard || this.isServo) {
                 const labels = this.root.querySelector(".sc3d-labels");
                 this.leaders = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 this.leaders.classList.add("sc3d-leaders");
@@ -409,26 +616,6 @@
                     labels.appendChild(label);
                     return {key, label};
                 });
-            } else if (this.mode === "servos") {
-                controls.innerHTML = `
-                  <label>Giro (X) <input type="range" class="yaw" min="-90" max="90" value="0"></label>
-                  <label>Inclinación (Y) <input type="range" class="pitch" min="-10" max="30" value="0"></label>
-                  <label>LEDs <input type="color" class="color" value="#ff4f9a"></label>
-                  <pre class="sc3d-code"></pre>`;
-                const update = () => {
-                    const yaw = +controls.querySelector(".yaw").value;
-                    const pitch = +controls.querySelector(".pitch").value;
-                    const color = controls.querySelector(".color").value;
-                    this.target = {yaw, pitch};
-                    this.setLeds(Array(12).fill(color));
-                    controls.querySelector(".sc3d-code").textContent =
-                        `robot.set_servo_angle(X, home_x ${yaw < 0 ? "-" : "+"} ${Math.abs(yaw)}, 300)\n` +
-                        `robot.set_servo_angle(Y, home_y ${pitch < 0 ? "-" : "+"} ${Math.abs(pitch)}, 300)\n` +
-                        `robot.set_rgb_color(0x${color.slice(1).toUpperCase()})`;
-                };
-                controls.addEventListener("input", update);
-                controls.addEventListener("keydown", (e) => e.stopPropagation());
-                update();
             } else if (this.isPeek) {
                 // landing shockwave
                 for (let i = 0; i < 3; i++) {
@@ -446,14 +633,6 @@
                 });
             } else if (this.mode === "mirror") {
                 controls.innerHTML = `<span class="sc3d-status">Cargando el simulador…</span>`;
-                const source = this.root.querySelector(".sc3d-source");
-                if (source) {
-                    const run = document.createElement("button");
-                    run.className = "sc3d-run";
-                    run.textContent = "Ejecutar en el simulador";
-                    run.addEventListener("click", () => window.loadSimulator().then((sim) => sim.run(source.textContent)));
-                    controls.prepend(run);
-                }
                 window.loadSimulator().then((sim) => this.attachSimulator(sim));
             }
         }
@@ -469,6 +648,7 @@
 
         // Mirror the simulator: servos, LEDs and its screen
         attachSimulator(sim) {
+            this.sim = sim;
             this.face.image = sim.canvas;
             const status = this.root.querySelector(".sc3d-status");
             const apply = (state) => {
@@ -486,6 +666,48 @@
             };
             sim.on("state", apply);
             apply(sim.state);
+            // Sensor controls of the camera box: shown on the model itself
+            this.felt = {head: [0, 0, 0], accel: [0, 0, 1], prox: 0};
+            this.tilt = 0;
+            this.hand = document.createElement("span");
+            this.hand.className = "sc3d-hand";
+            this.hand.textContent = "\u270B";
+            this.root.appendChild(this.hand);
+            sim.on("input", (inputs) => { this.felt = inputs; });
+            this.felt = sim.inputs();
+        }
+
+        // Index of the head touch zone under the pointer (-1: none)
+        touchZoneAt(e) {
+            const THREE = this.THREE;
+            const rect = this.canvas.getBoundingClientRect();
+            const ndc = new THREE.Vector2(
+                (e.clientX - rect.left) / rect.width * 2 - 1,
+                -((e.clientY - rect.top) / rect.height) * 2 + 1);
+            this.raycaster = this.raycaster || new THREE.Raycaster();
+            this.raycaster.setFromCamera(ndc, this.camera);
+            // the zones are printed on the shell (coplanar): accept a zone hit
+            // if nothing else on the robot is clearly in front of it
+            const zone = this.raycaster.intersectObjects(this.touchMeshes, false)[0];
+            if (!zone) return -1;
+            const first = this.raycaster.intersectObject(this.robot, true)[0];
+            return first.distance > zone.distance - 0.05 ? zone.object.userData.touchZone : -1;
+        }
+
+        // Touch zones glow, the body tilts and shakes with the IMU, and a
+        // hand comes closer with the proximity sensor
+        showInputs(now) {
+            const {head, accel, prox} = this.felt;
+            this.touches.forEach((material, i) => {
+                material.emissive.set(head[i] ? 0xff4f9a : 0x000000);
+                material.emissiveIntensity = head[i] ? 1.4 : 0;
+            });
+            this.tilt += (Math.max(-1, Math.min(1, accel[0])) * 0.35 - this.tilt) * 0.25;
+            this.robot.rotation.z = -this.tilt;
+            this.robot.position.x = Math.abs(accel[0]) > 1.2 ? Math.sin(now / 18) * 0.12 : 0;
+            const near = prox / 2047;
+            this.hand.style.opacity = near > 0.02 ? String(0.35 + 0.65 * near) : "0";
+            this.hand.style.transform = `translate(-50%, -50%) scale(${0.5 + 0.9 * near})`;
         }
 
         peekPhase(now = performance.now()) {
@@ -565,21 +787,194 @@
             this.setLeds(colors);
         }
 
+        // ---- servo slide: parts, then PWM, then a serial bus servo
+        servoPhase() {
+            return this.root.querySelectorAll(".sc3d-step.visible").length;
+        }
+
+        // ease the horn towards a new angle, like the servo's own controller
+        servoAngle(now, target, ms = 600) {
+            const st = this.servoState;
+            if (target !== st.to) {
+                st.from = st.angle;
+                st.to = target;
+                st.moveAt = now;
+            }
+            const k = Math.min(1, (now - st.moveAt) / ms);
+            const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+            const before = st.angle;
+            st.angle = st.from + (st.to - st.from) * e;
+            return st.angle - before;   // the motor and gears turn while it moves
+        }
+
+        placePulses(list, curve, t0s, now, forward = true, group = this.servo.pwm) {
+            list.forEach((m, i) => {
+                const t = t0s[i] === undefined ? -1 : (now - t0s[i]) / 700;
+                m.visible = t >= 0 && t <= 1;
+                if (!m.visible) return;
+                const p = curve.getPoint(forward ? 1 - t : t);   // curves run servo -> far end
+                m.position.copy(group.localToWorld(p.clone()));
+            });
+        }
+
+        animateServo(now) {
+            const THREE = this.THREE;
+            const sv = this.servo, st = this.servoState;
+            const phase = this.servoPhase();
+            const pwmDemo = phase === SERVO_PARTS + 1, busDemo = phase >= SERVO_PARTS + 2;
+            if (phase !== st.phase) {
+                st.phase = phase;
+                st.cycle = now;
+                this.panel.innerHTML = pwmDemo ? this.pwmPanel() : (busDemo ? this.busPanel() : "");
+                st.manual = false;
+                st.shownTarget = null;
+                const slider = this.panel.querySelector(".sp-slider");
+                if (slider) {
+                    slider.addEventListener("input", () => { st.manual = true; });
+                    // arrows move the slider, not the presentation
+                    slider.addEventListener("keydown", (e) => e.stopPropagation());
+                }
+                this.panel.classList.toggle("shown", pwmDemo || busDemo);
+            }
+            // swap the hobby servo for the bus servo
+            st.swap += ((busDemo ? 1 : 0) - st.swap) * 0.08;
+            sv.pwm.scale.setScalar(Math.max(0.001, 1 - st.swap));
+            sv.bus.scale.setScalar(Math.max(0.001, st.swap));
+            sv.pwm.visible = st.swap < 0.95;
+            sv.bus.visible = st.swap > 0.05;
+            // demos: pan so the servo sits left of the protocol panel
+            this.panX += ((pwmDemo ? 0.25 : (busDemo ? 0.2 : 0)) - this.panX) * 0.08;
+            sv.pwm.position.x = -st.swap * 3;
+            sv.bus.position.x = (1 - st.swap) * 3;
+
+            let turn = 0;
+            Object.values(sv.pulses).flat().forEach((m) => { m.visible = false; });
+            if (pwmDemo) {
+                // the slider picks the angle; until it is touched, a new angle
+                // every 2.4 s. A pulse every 20 ms travels the wire (slowed down)
+                const slider = this.panel.querySelector(".sp-slider");
+                const t = now - st.cycle;
+                if (!st.manual) slider.value = [90, 20, 160, 60][Math.floor(t / 2400) % 4];
+                const target = +slider.value;
+                turn = this.servoAngle(now, target);
+                const starts = sv.pulses.pwm.map((_, i) => now - ((t + i * 330) % 1320));
+                this.placePulses(sv.pulses.pwm, sv.pwmCable.curve, starts, now);
+                if (target !== st.shownTarget) {
+                    st.shownTarget = target;
+                    const ms = 0.5 + target / 180 * 2, w = ms * 18, period = 150;
+                    this.panel.querySelector(".sp-deg").textContent = target + "°";
+                    this.panel.querySelector(".sp-call").textContent = target;
+                    this.panel.querySelector(".sp-ms").textContent = ms.toFixed(2).replace(".", ",") + " ms";
+                    this.panel.querySelector(".sp-ms").setAttribute("x", (14 + w).toFixed(1));
+                    this.panel.querySelector(".sp-wave path").setAttribute("d",
+                        `M0 54 H10 V14 H${10 + w} V54 H${10 + period} V14 H${10 + period + w} V54 H320`);
+                }
+            } else if (busDemo) {
+                // write a goal position, then ask where it is and hear the answer
+                const goals = [600, 330, 460];
+                const t = now - st.cycle;
+                const n = Math.floor(t / 5200), k = t % 5200;
+                const goal = goals[n % goals.length];
+                if (st.busGoal !== goal) {
+                    st.busGoal = goal;
+                    this.panel.innerHTML = this.busPanel(goal);
+                }
+                const stepAt = (i, start) => start + i * 80;
+                const rows = this.panel.querySelectorAll(".sp-row");
+                rows.forEach((r) => r.classList.remove("active"));
+                if (k < 1300) {
+                    rows[0].classList.add("active");
+                    this.placePulses(sv.pulses.out, sv.busIn.curve, sv.pulses.out.map((_, i) => stepAt(i, now - k)), now, true, sv.bus);
+                } else if (k > 2000 && k < 3000) {
+                    rows[1].classList.add("active");
+                    this.placePulses(sv.pulses.out, sv.busIn.curve, sv.pulses.out.map((_, i) => stepAt(i, now - k + 2000)), now, true, sv.bus);
+                } else if (k >= 3000 && k < 4300) {
+                    rows[2].classList.add("active");
+                    this.placePulses(sv.pulses.back, sv.busIn.curve, sv.pulses.back.map((_, i) => stepAt(i, now - k + 3000)), now, false, sv.bus);
+                }
+                // bytes light up as they travel
+                const lit = (row, start) => row.querySelectorAll("span").forEach((b, i) => {
+                    b.classList.toggle("sent", k >= start + i * 60);
+                });
+                lit(rows[0], 0);
+                lit(rows[1], 2000);
+                lit(rows[2], 3000);
+                this.panel.querySelectorAll(".sp-meaning").forEach((m, i) => {
+                    m.classList.toggle("shown", k >= [900, 2700, 3900][i]);
+                });
+                const degrees = (st.busGoal - 460) * 5 / 16;
+                turn = this.servoAngle(now, k >= 900 ? degrees : (st.lastDegrees ?? 0));
+                if (k >= 900) st.lastDegrees = degrees;
+            } else {
+                // parts: the controller hunts gently around its set point
+                turn = this.servoAngle(now, 90 + 25 * Math.sign(Math.sin(now / 1800)), 900);
+            }
+            const shaft = busDemo ? sv.busShaft : sv.pwmShaft;
+            shaft.rotation.y = THREE.MathUtils.degToRad((busDemo ? 0 : 90) - st.angle);
+            // motor fast, gears slower: the gear train is the reduction
+            sv.gears[0].rotation.y += turn * 0.6;
+            sv.gears[1].rotation.y -= turn * 0.25;
+            sv.gears[2].rotation.y += turn * 0.02;
+        }
+
+        pwmPanel() {
+            const k = (t) => `<span class="hljs-keyword">${t}</span>`, n = (t) => `<span class="hljs-number">${t}</span>`;
+            const c = (t) => `<span class="hljs-comment">${t}</span>`;
+            return `<div class="sp-title"><b>PWM</b> · 50 Hz · servo de modelismo · <b>solo ida</b></div>
+                <label class="sp-control">Ángulo <input type="range" class="sp-slider" min="0" max="180" value="90">
+                  <output class="sp-deg">90°</output></label>
+                <pre class="sp-code"><code>${k("from")} machine ${k("import")} Pin, PWM
+servo = PWM(Pin(${n(5)}), freq=${n(50)})    ${c("# a pulse every 20 ms")}
+
+${k("def")} angle(degrees):             ${c("# 0.5 ms = 0°, 2.5 ms = 180°")}
+    servo.duty_ns(${n("500_000")} + degrees * ${n("2_000_000")} // ${n(180)})
+
+angle(<span class="hljs-number sp-call">90</span>)</code></pre>
+                <svg class="sp-wave" viewBox="0 0 320 76">
+                  <path d="M0 54 H320"/>
+                  <text class="sp-ms" x="41" y="30">1,50 ms</text>
+                  <text class="sp-period" x="85" y="72">20 ms · 50 Hz</text>
+                </svg>`;
+        }
+
+        busPanel(goal = 600) {
+            const write = scsPacket(1, 0x03, [42, goal >> 8, goal & 0xFF, 0x01, 0x2C, 0, 0]);
+            const read = scsPacket(1, 0x02, [56, 2]);
+            const reply = scsPacket(1, 0x00, [goal >> 8, goal & 0xFF]);
+            // each byte coloured by its role, like the words that explain it:
+            // g framing (header, length, checksum, unused), id servo,
+            // inst instruction and register, pos position, time duration
+            const bytes = (list, roles) => hex(list).map((b, i) =>
+                `<span class="r-${roles.split(" ")[i]}">${b}</span>`).join("");
+            const w = (role, text) => `<b class="r-${role}">${text}</b>`;
+            return `<div class="sp-title"><b>UART</b> · 1 Mbit/s · servo de bus serie</div>
+                <div class="sp-term">
+                  <div class="sp-row"><b class="sp-tx">TX</b> ${bytes(write, "g g id g inst inst pos pos time time g g g")}</div>
+                  <div class="sp-meaning"># ${w("id", "servo 1")}: ${w("inst", "ve a la posición")} ${w("pos", goal)} en ${w("time", "300 ms")}</div>
+                  <div class="sp-row"><b class="sp-tx">TX</b> ${bytes(read, "g g id g inst inst inst g")}</div>
+                  <div class="sp-meaning"># ${w("id", "servo 1")}: ${w("inst", "¿dónde estás?")}</div>
+                  <div class="sp-row"><b class="sp-rx">RX</b> ${bytes(reply, "g g id g inst pos pos g")}</div>
+                  <div class="sp-meaning"># ${w("id", "servo 1")}: ${w("inst", "sin errores")}, estoy en ${w("pos", goal)}</div>
+                </div>`;
+        }
+
         frame(now) {
             if (!this.running) return;
             const THREE = this.THREE;
             if (this.isPeek) this.animatePeek(now);
+            if (this.felt) this.showInputs(now);
             if (this.mode === "anatomy" && !this.userOrbit) this.orbit.theta += 0.003;
-            if (this.isBoard && !this.userOrbit) {
+            if (this.isServo) this.animateServo(now);
+            if ((this.isBoard || this.isServo) && !this.userOrbit) {
                 // a board is flat: swing in front of it instead of going round
-                this.orbit.theta = 0.75 * Math.sin(now / 3200);
+                this.orbit.theta = this.isServo ? 0.2 + 0.45 * Math.sin(now / 3600) : 0.75 * Math.sin(now / 3200);
                 this.orbit.phi = 1.2 + 0.12 * Math.sin(now / 2300);
             }
             if (this.mode === "anatomy") {
                 this.target.yaw = Math.sin(now / 2400) * 25;
                 this.target.pitch = Math.sin(now / 1700) * 8;
             }
-            if (!this.isBoard) {
+            if (!this.isBoard && !this.isServo) {
                 // critically damped approach, like the firmware's springs
                 ["yaw", "pitch"].forEach((axis) => {
                     this.current[axis] += (this.target[axis] - this.current[axis]) * 0.12;
@@ -595,6 +990,11 @@
                 MODEL_HEIGHT / 2 + radius * Math.cos(phi),
                 radius * Math.sin(phi) * Math.cos(theta));
             this.camera.lookAt(0, this.lookAtY, 0);
+            if (this.isServo) {
+                // shift the picture, not the camera: the servo keeps its size
+                const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
+                this.camera.setViewOffset(w, h, this.panX * w, 0, w, h);
+            }
             this.renderer.render(this.scene, this.camera);
             if (this.labels) this.placeLabels();
             requestAnimationFrame((t) => this.frame(t));
@@ -621,7 +1021,8 @@
             const columns = {left: [], right: []};
             // with ":steps:" labels appear one by one, driven by fragments
             const steps = this.root.querySelectorAll(".sc3d-step");
-            const shown = steps.length ? this.root.querySelectorAll(".sc3d-step.visible").length : Infinity;
+            let shown = steps.length ? this.root.querySelectorAll(".sc3d-step.visible").length : Infinity;
+            if (this.isServo && shown > SERVO_PARTS) shown = 0;   // demos: the panel explains
             this.labels.forEach((item, index) => {
                 item.shown = index < shown;
                 item.label.classList.toggle("pending", !item.shown);

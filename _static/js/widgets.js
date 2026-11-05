@@ -1,7 +1,6 @@
 /*
  * Interactive explainers (``.. widget:: <name>``):
  *
- *   pwm       move the angle: pulse width, duty cycle and the servo horn
  *   pcontrol  move the gain: how a proportional controller tracks a face,
  *             slow with low gain, oscillating with high gain
  */
@@ -18,74 +17,6 @@
         const ctx = canvas.getContext("2d");
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         return {ctx, w, h};
-    }
-
-    // ---- PWM: 50 Hz, 0.5 ms (0°) .. 2.5 ms (180°) ----
-    function pwm(root) {
-        root.innerHTML = `
-          <label class="w-row">Ángulo <input type="range" min="0" max="180" value="90"> <output></output></label>
-          <canvas class="w-pulse"></canvas>
-          <canvas class="w-horn"></canvas>
-          <pre class="w-code"></pre>`;
-        const input = root.querySelector("input");
-        const output = root.querySelector("output");
-        const code = root.querySelector(".w-code");
-        let shown = 90;
-
-        function draw() {
-            if (!root.clientWidth) return;   // slide not laid out yet
-            const angle = +input.value;
-            shown += (angle - shown) * 0.2;
-            const pulseUs = 500 + angle * 2000 / 180;
-            output.textContent = `${angle}°`;
-            code.textContent = `angle(${angle})\n# pulso ${(pulseUs / 1000).toFixed(2)} ms cada 20 ms` +
-                `\n# duty_ns(${Math.round(pulseUs * 1000).toLocaleString("es")})`;
-
-            // pulse train: two 20 ms periods
-            const p = setupCanvas(root.querySelector(".w-pulse"));
-            const {ctx, w, h} = p;
-            ctx.clearRect(0, 0, w, h);
-            const base = h - 18, top = 18, period = (w - 20) / 2;
-            ctx.strokeStyle = INK;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(10, base);
-            for (let i = 0; i < 2; i++) {
-                const x0 = 10 + i * period, x1 = x0 + period * pulseUs / 20000;
-                ctx.lineTo(x0, base); ctx.lineTo(x0, top); ctx.lineTo(x1, top); ctx.lineTo(x1, base);
-            }
-            ctx.lineTo(w - 10, base);
-            ctx.stroke();
-            ctx.fillStyle = NEON;
-            ctx.font = "600 14px 'JetBrains Mono', monospace";
-            ctx.fillText(`${(pulseUs / 1000).toFixed(2)} ms`, 14, top - 4 + 16);
-            ctx.fillStyle = INK;
-            ctx.fillText("20 ms", 10 + period - 46, base + 14);
-
-            // servo horn
-            const q = setupCanvas(root.querySelector(".w-horn"));
-            const hc = q.ctx, cx = q.w / 2, cy = q.h - 20, r = Math.max(10, Math.min(q.w / 2, q.h) - 30);
-            hc.clearRect(0, 0, q.w, q.h);
-            hc.strokeStyle = "rgba(31, 42, 68, 0.3)";
-            hc.lineWidth = 2;
-            hc.beginPath();
-            hc.arc(cx, cy, r, Math.PI, 0);
-            hc.stroke();
-            hc.fillStyle = INK;
-            hc.fillRect(cx - 40, cy - 14, 80, 30);
-            const rad = Math.PI - shown * Math.PI / 180;
-            hc.strokeStyle = NEON;
-            hc.lineWidth = 12;
-            hc.lineCap = "round";
-            hc.beginPath();
-            hc.moveTo(cx, cy);
-            hc.lineTo(cx + Math.cos(rad) * r * 0.85, cy - Math.sin(rad) * r * 0.85);
-            hc.stroke();
-            if (Math.abs(shown - angle) > 0.2) requestAnimationFrame(draw);
-        }
-        input.addEventListener("input", draw);
-        root.addEventListener("keydown", (e) => e.stopPropagation());
-        return draw;
     }
 
     // ---- Proportional control: yaw follows a face that jumps ----
@@ -147,7 +78,7 @@
         return draw;
     }
 
-    const WIDGETS = {pwm, pcontrol};
+    const WIDGETS = {pcontrol};
 
     function onSlide(slide) {
         slide.querySelectorAll(".widget").forEach((root) => {

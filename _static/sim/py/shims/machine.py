@@ -41,10 +41,53 @@ class Pin:
         return self.value(v)
 
 
-class I2C:
-    """Fake I2C bus: reports the Stack-chan device addresses, reads zeros."""
+_SI12T = 0x68             # head touch controller: 3 zones, 2 bits each
+_SI12T_OUTPUT = 0x10
 
-    _ADDRESSES = [0x18, 0x28, 0x41, 0x59, 0x68, 0x6F]
+
+_LTR553 = 0x23            # proximity and light sensor: 11-bit proximity
+_LTR553_PS_DATA = 0x8D    # low byte, then 3 high bits at 0x8E
+
+
+def _register(addr, memaddr):
+    """Registers the simulator knows; everything else reads as zero."""
+    if addr == _SI12T and memaddr == _SI12T_OUTPUT:
+        zones = _bridge().state.head_touch
+        return sum(0b11 << (2 * i) for i, down in enumerate(zones) if down)
+    if addr == _LTR553 and memaddr in (_LTR553_PS_DATA, _LTR553_PS_DATA + 1):
+        prox = max(0, min(2047, int(_bridge().state.prox)))
+        return prox & 0xFF if memaddr == _LTR553_PS_DATA else prox >> 8
+    return 0
+
+
+# I/O expander (PY32): the 12 RGB LEDs live in its LED RAM (RGB565, little
+# endian, 2 bytes each from 0x30) and are shown when bit 6 of 0x24 is set
+_IOE = 0x6F
+_IOE_LED_CFG = 0x24
+_IOE_LED_RAM = 0x30
+_ioe_led_ram = bytearray(64)
+
+
+def _ioe_write(memaddr, data):
+    if _IOE_LED_RAM <= memaddr < _IOE_LED_RAM + len(_ioe_led_ram):
+        start = memaddr - _IOE_LED_RAM
+        chunk = data[:len(_ioe_led_ram) - start]
+        _ioe_led_ram[start:start + len(chunk)] = chunk
+    elif memaddr == _IOE_LED_CFG and data and data[0] & 0x40:
+        state = _bridge().state
+        count = min(data[0] & 0x3F, len(state.leds))
+        leds = list(state.leds)
+        for i in range(count):
+            c = _ioe_led_ram[2 * i] | _ioe_led_ram[2 * i + 1] << 8
+            leds[i] = ((c >> 11) << 3, ((c >> 5) & 0x3F) << 2, (c & 0x1F) << 3)
+        state.leds = leds
+
+
+class I2C:
+    """Fake I2C bus: reports the Stack-chan device addresses; the head touch
+    sensor (Si12T) answers with the zones pressed on the 3D model."""
+
+    _ADDRESSES = [0x18, 0x23, 0x28, 0x41, 0x59, 0x68, 0x6F]
 
     def __init__(self, id=0, scl=None, sda=None, freq=400000, **kwargs):
         self._id = id
@@ -63,38 +106,120 @@ class I2C:
         return len(buf)
 
     def readfrom_mem(self, addr, memaddr, nbytes, addrsize=8):
-        return bytes(nbytes)
+        return bytes(_register(addr, memaddr + i) for i in range(nbytes))
 
     def readfrom_mem_into(self, addr, memaddr, buf, addrsize=8):
         for i in range(len(buf)):
-            buf[i] = 0
+            buf[i] = _register(addr, memaddr + i)
 
     def writeto_mem(self, addr, memaddr, buf, addrsize=8):
+        if addr == _IOE:
+            _ioe_write(memaddr, bytes(buf))
         return len(buf)
 
 
 SoftI2C = I2C
 
 
+# Stack-chan's servo bus: Feetech SCS servos on UART1. Raw positions are
+# steps of 5/16 degree; the firmware's zero positions (yaw 460, pitch 620)
+# map onto the simulator's servo domains (yaw 0..360 centred at 180,
+# pitch 0..90).
+_SCS_STEP = 5 / 16
+_SCS_ZERO = {1: (460, 180.0), 2: (620, 0.0)}
+
+
+class _ScsBus:
+    """Answers SCS packets (READ / WRITE) like the robot's two servos."""
+
+    def __init__(self):
+        self.regs = {1: {}, 2: {}}
+
+    def _servo(self, sid):
+        return _bridge().state.servos.get(sid)
+
+    def _raw(self, sid):
+        zero, deg0 = _SCS_ZERO[sid]
+        return int(round(zero + (self._servo(sid).current() - deg0) / _SCS_STEP))
+
+    def handle(self, packet):
+        """Return the status packet for one request (or b"" if no reply)."""
+        if len(packet) < 6 or packet[0] != 0xFF or packet[1] != 0xFF:
+            return b""
+        sid, length, inst = packet[2], packet[3], packet[4]
+        params = packet[5:4 + length - 1]
+        if (~sum(packet[2:4 + length - 1]) & 0xFF) != packet[3 + length]:
+            return b""          # bad checksum: a real servo stays silent
+        state = _bridge().state
+        if sid not in _SCS_ZERO or not state.servo_power:
+            return b""          # no such servo, or unpowered
+        data = b""
+        if inst == 0x03 and params:                 # WRITE
+            addr, values = params[0], params[1:]
+            servo = self._servo(sid)
+            if addr == 40 and values:               # torque enable
+                servo.torque = bool(values[0])
+            elif addr == 42 and len(values) >= 2:   # goal position (+ time, speed)
+                raw = values[0] << 8 | values[1]
+                ms = values[2] << 8 | values[3] if len(values) >= 4 else 0
+                zero, deg0 = _SCS_ZERO[sid]
+                servo.set_target(deg0 + (raw - zero) * _SCS_STEP, ms)
+        elif inst == 0x02 and len(params) >= 2:     # READ
+            addr, count = params[0], params[1]
+            if addr == 56:                          # present position
+                raw = self._raw(sid)
+                mem = bytes([(raw >> 8) & 0xFF, raw & 0xFF, 0, 0])
+            elif addr == 66:                        # moving
+                mem = bytes([1 if self._servo(sid).moving() else 0])
+            elif addr == 40:
+                mem = bytes([1 if self._servo(sid).torque else 0])
+            else:
+                mem = b""
+            data = (mem + bytes(count))[:count]
+        body = bytes([sid, len(data) + 2, 0]) + data
+        return b"\xff\xff" + body + bytes([~sum(body) & 0xFF])
+
+
+_scs_bus = _ScsBus()
+
+
 class UART:
     def __init__(self, id=1, baudrate=115200, tx=None, rx=None, **kwargs):
         self._id = id
         self._buf = b""
+        self._scs = _scs_bus if id == 1 else None
 
     def write(self, data):
+        data = bytes(data)
+        if self._scs is not None:
+            # a request may be split in several writes: answer whole packets
+            self._pending = getattr(self, "_pending", b"") + data
+            while len(self._pending) >= 4 and len(self._pending) >= 4 + self._pending[3]:
+                size = 4 + self._pending[3]
+                self._buf += self._scs.handle(self._pending[:size])
+                self._pending = self._pending[size:]
         return len(data)
 
     def read(self, nbytes=None):
-        return None
+        if not self._buf:
+            return None
+        if nbytes is None:
+            nbytes = len(self._buf)
+        data, self._buf = self._buf[:nbytes], self._buf[nbytes:]
+        return data
 
     def readinto(self, buf):
-        return None
+        data = self.read(len(buf))
+        if not data:
+            return None
+        buf[:len(data)] = data
+        return len(data)
 
     def readline(self):
-        return None
+        return self.read()
 
     def any(self):
-        return 0
+        return len(self._buf)
 
     def flush(self):
         pass

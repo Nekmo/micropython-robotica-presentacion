@@ -398,10 +398,79 @@
             animation: bob 1.6s ease-in-out infinite;
         }
     }
-    &[data-emotion="determined"] {
-        --mouth-sx: 0.7;
-        .sc-eye.left { clip-path: polygon(0 34%, 100% 4%, 100% 100%, 0 100%); }
-        .sc-eye.right { clip-path: polygon(0 4%, 100% 34%, 100% 100%, 0 100%); }
+    &[data-emotion="wink"] {
+        // ready to go: a wink, a crooked smile and a sparkle
+        .sc-eye.left {
+            transform: translate(calc(var(--look-x) * 30 * var(--u)), calc(var(--look-y) * 16 * var(--u) + 10 * var(--u))) scale(1, 0.42);
+            border-radius: 50% 50% 12% 12% / 100% 100% 12% 12%;
+        }
+        .sc-mouth {
+            height: calc(34 * var(--u));
+            border-radius: 0 0 50% 50% / 0 0 100% 100%;
+            transform: translateX(calc(var(--look-x) * 14 * var(--u) + 12 * var(--u))) rotate(-6deg) scale(0.8, 1);
+        }
+        &::after {
+            content: "✦";
+            position: absolute;
+            right: calc(-40 * var(--u));
+            top: calc(-20 * var(--u));
+            font: calc(90 * var(--u)) $font-display;
+            color: $amber;
+            animation: bob 2s ease-in-out infinite;
+        }
+    }
+    &[data-emotion="ticklish"] {
+        // > <  squeezed eyes, blushing, laughing
+        .sc-eye.left { clip-path: polygon(0 0, 100% 50%, 0 100%, 0 76%, 58% 50%, 0 24%); }
+        .sc-eye.right { clip-path: polygon(100% 0, 0 50%, 100% 100%, 100% 76%, 42% 50%, 100% 24%); }
+        .sc-mouth { height: calc(46 * var(--u)); border-radius: 0 0 50% 50% / 0 0 100% 100%; animation: giggle 0.5s ease-in-out infinite; }
+        .sc-cheek { opacity: 0.9; }
+    }
+    &[data-emotion="curious"] {
+        // one eye wider, a small "o": listening
+        .sc-eye.right { transform: translate(calc(var(--look-x) * 30 * var(--u)), calc(var(--look-y) * 16 * var(--u) - 6 * var(--u))) scale(1.25); }
+        .sc-eye.left { transform: translate(calc(var(--look-x) * 30 * var(--u)), calc(var(--look-y) * 16 * var(--u) + 4 * var(--u))) scale(0.85); }
+        .sc-mouth {
+            width: calc(36 * var(--u));
+            height: calc(36 * var(--u));
+            margin-left: calc(-18 * var(--u));
+            top: calc(182 * var(--u));
+            border-radius: 50%;
+        }
+        &::after {
+            content: "♪";
+            position: absolute;
+            right: calc(-50 * var(--u));
+            top: calc(-20 * var(--u));
+            font: calc(110 * var(--u)) $font-display;
+            color: $led;
+            animation: bob 2s ease-in-out infinite;
+        }
+    }
+    &[data-emotion="love"] {
+        // heart eyes that beat
+        .sc-eye {
+            background: $neon;
+            clip-path: polygon(50% 96%, 4% 46%, 2% 22%, 14% 6%, 32% 2%, 50% 18%, 68% 2%, 86% 6%, 98% 22%, 96% 46%);
+            animation: heartbeat 1.1s ease-in-out infinite;
+        }
+        .sc-mouth { height: calc(30 * var(--u)); border-radius: 0 0 50% 50% / 0 0 100% 100%; }
+        .sc-cheek { opacity: 0.7; }
+    }
+    &[data-emotion="thinking"] {
+        // eyes up and to the side, mouth pushed aside, "..." on top
+        --mouth-sx: 0.5;
+        .sc-eye { transform: translate(calc(var(--look-x) * 10 * var(--u) - 18 * var(--u)), calc(-22 * var(--u))) scale(0.9); }
+        .sc-mouth { transform: translateX(calc(30 * var(--u))) rotate(-6deg) scale(0.5, 1); }
+        &::after {
+            content: "…";
+            position: absolute;
+            right: calc(-40 * var(--u));
+            top: calc(-60 * var(--u));
+            font: calc(120 * var(--u)) $font-display;
+            color: $amber;
+            animation: bob 2.6s ease-in-out infinite;
+        }
     }
 
     // blink wins over every emotion
@@ -412,6 +481,16 @@
 
     &.small { --u: 0.5px; }
     &.screen { --u: 0.52px; margin: 0; flex: none; }
+}
+
+@keyframes giggle {
+    0%, 100% { transform: translateY(0) scale(1, 1); }
+    50% { transform: translateY(calc(-6 * var(--u))) scale(1.05, 0.8); }
+}
+@keyframes heartbeat {
+    0%, 60%, 100% { scale: 1; }
+    20% { scale: 1.18; }
+    40% { scale: 0.96; }
 }
 
 @keyframes bob {
@@ -489,16 +568,6 @@
         }
         > p { margin: 0; }
     }
-}
-
-// Spec sheet: label/value pairs of a component
-.reveal dl.spec, .reveal .spec dl {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.25em 1em;
-    font-size: 0.85em;
-    dt { font-weight: 800; }
-    dd { margin: 0; }
 }
 
 // Robot comparison cards for "other robots"
@@ -615,7 +684,7 @@
     aspect-ratio: 4 / 3;
     overflow: hidden;
     background: $screen;
-    border: 4px solid $shell;
+    border: 2.5px solid rgba($shell, 0.8);
     border-radius: $radius-head;
     cursor: move;
     touch-action: none;
@@ -638,6 +707,16 @@
         background: $screen;
         cursor: default;
         .stackchan-3d.mini {
+            .sc3d-hand {
+                position: absolute;
+                left: 50%;
+                top: 72%;
+                z-index: 3;
+                font-size: 40px;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s, transform 0.2s;
+            }
             flex: 1;
             min-height: 0;
             position: relative;
@@ -645,6 +724,12 @@
             .sc3d-controls { left: 10px; right: auto; top: 8px; width: auto; }
             .sc3d-controls { display: none; }
         }
+    }
+    .sim-hint {
+        flex-basis: 100%;
+        color: $led;
+        font-size: 12px;
+        &:empty { display: none; }
     }
     .sim-controls {
         display: flex;
@@ -666,7 +751,6 @@
             &[aria-pressed="true"] { background: $neon; }
         }
         input[type="range"] { width: 80px; accent-color: $neon; }
-        .sim-group { display: inline-flex; gap: 4px; align-items: center; }
     }
 
     // Only the selected source is visible
@@ -800,32 +884,8 @@
         gap: 14px;
         width: 44%;
         font-size: 22px;
-        label { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-        input[type="range"] { width: 60%; accent-color: $neon; }
-        .sc3d-code {
-            margin: 10px 0 0;
-            padding: 14px;
-            font: 17px/1.5 $font-mono;
-            background: $ink;
-            color: $shell;
-            border-radius: $radius-small;
-            white-space: pre;
-            box-shadow: none;
-            width: auto;
-        }
         .sc3d-status { font: 18px $font-mono; color: $led; }
-        .sc3d-run {
-            align-self: flex-end;
-            font: 700 18px $font-body;
-            padding: 8px 16px;
-            border: 0;
-            border-radius: 8px;
-            background: $neon;
-            color: $ink;
-            cursor: pointer;
-        }
     }
-    &[data-mode="servos"] canvas { width: 54% !important; }
 }
 
 // ---------------------------------------------------------------- reveal chrome
@@ -894,27 +954,15 @@
     padding: 18px 20px;
     font-size: 22px;
     color: $ink;
-    background: rgba(#fff, 0.7);
-    border: 2px solid $ink;
+    background: none;
+    border: 0;
     border-radius: $radius-head;
 
     .w-row { display: flex; align-items: center; gap: 14px; font-weight: 800; }
     input[type="range"] { flex: 1; accent-color: $neon; }
     output { min-width: 3.2em; font-family: $font-mono; text-align: right; }
     canvas { width: 100%; display: block; }
-    .w-pulse { height: 110px; }
-    .w-horn { height: 160px; }
     .w-plot { height: 170px; }
-    .w-code {
-        margin: 0;
-        padding: 10px 12px;
-        font: 16px/1.5 $font-mono;
-        color: $shell;
-        background: $ink;
-        border-radius: $radius-small;
-        box-shadow: none;
-        width: auto;
-    }
     .w-verdict { margin: 0; font-weight: 800; color: darken($neon, 8%); max-width: none; }
 }
 .reveal .wide-cols { align-items: center; }
@@ -1205,6 +1253,143 @@
 
 // 3D labels waiting for their step (``:steps:`` on stackchan-3d)
 .stackchan-3d .sc3d-label.pending { opacity: 0; }
+
+// "Dos formas de dibujar": a small Stack-chan above each column, its screen
+// drawn by screens.js
+.screen-robot {
+    width: 300px;
+    margin: 26px auto 0;
+    .intro-head { padding: 18px 18px 32px; border-radius: 34px; box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.12), 0 18px 34px rgba(0, 0, 0, 0.25); }
+    .intro-screen { height: auto; border-width: 10px; border-radius: 12px; }
+    .intro-camera { bottom: 9px; width: 14px; height: 14px; margin-left: -7px; border-width: 3px; }
+    .intro-base { height: 34px; margin: 0 20px; }
+    canvas { display: block; width: 100%; height: auto; }
+}
+
+// "Los límites": text on the left, the neural network fills the right margin
+.reveal .slides section#los-limites > ul { max-width: 56%; }
+
+// Recursos: plain links, no underline
+.reveal .slides section#recursos a { border: 0; text-decoration: none; }
+
+// Python Málaga: white title and links, no underline
+.reveal .slides section#python-malaga {
+    > :is(h1, h2), > :is(h1, h2) strong { color: $shell; }
+    a { color: $shell; border: 0; text-decoration: none; }
+}
+
+// "Micropython en microcontroladores": the headline on two lines, as before
+// the key word moved to the front (and got shorter)
+.reveal .slides section#micropython-en-microcontroladores > :is(h1, h2) { max-width: 9em; margin-left: auto; margin-right: auto; text-align: center; }
+
+.screen-robot[data-mode="mail"] { position: relative; width: 360px; }
+.screen-robot .mail-letter {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    z-index: 3;
+    width: 64px;
+    margin: -22px 0 0 -32px;
+    pointer-events: none;
+    animation: letter-fly 1.3s cubic-bezier(0.5, 0, 0.75, 0.6) both;
+    svg { display: block; width: 100%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35)); }
+}
+@keyframes letter-fly {
+    0% { transform: translate(var(--from-x), var(--from-y)) rotate(var(--spin)) scale(1.2); opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { transform: translate(0, 0) rotate(0deg) scale(0.3); opacity: 0; }
+}
+
+// "Contactar": the links on the left, Stack-chan with my face on the right
+.reveal .contact-cols {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 40px;
+    align-items: center;
+}
+
+// "Dos caminos": an animation under each column
+.reveal .slides section#dos-caminos .two-cols { align-items: start; }
+.reveal canvas.path-anim { display: block; width: 100%; max-width: 480px; height: auto; margin: 22px auto 0; }
+
+// Servo slide: protocol panel of the PWM and UART demos (stackchan3d.js)
+.stackchan-3d .servo-panel {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    z-index: 2;
+    width: 560px;
+    font: 18px $font-body;
+    color: $ink;
+    opacity: 0;
+    transform: translate(20px, -50%);
+    transition: opacity 0.4s, transform 0.4s;
+    &.shown { opacity: 1; transform: translate(0, -50%); }
+    b { font-weight: 800; }
+    .sp-title { font-size: 20px; margin-bottom: 10px; b { color: $neon; } }
+    .sp-wave {
+        width: 100%;
+        height: 80px;
+        path { stroke: $ink; stroke-width: 3; fill: none; stroke-linejoin: round; }
+        text { font: 13px $font-mono; fill: rgba($ink, 0.6); }
+        .sp-ms { fill: darken($neon, 6%); font-weight: 700; }
+    }
+    .sp-control {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        input { flex: 1; accent-color: $neon; }
+        output { min-width: 3em; font-family: $font-mono; text-align: right; }
+    }
+    .sp-code {
+        margin: 12px 0 6px;
+        padding: 12px 14px;
+        width: auto;
+        font: 14px/1.5 $font-mono;
+        color: $shell;
+        background: $ink;
+        border-radius: 8px;
+        box-shadow: none;
+        code { padding: 0; background: none; max-height: none; }
+        .hljs-keyword { color: $neon; }
+        .hljs-number { color: $led; }
+        .hljs-comment { color: rgba($shell, 0.5); font-style: italic; }
+        .sp-call { color: $neon; font-weight: 700; }
+    }
+    .sp-line { font-size: 22px; margin: 6px 0; }
+    .sp-dir { color: rgba($ink, 0.7); }
+    // the bus conversation, as seen on a serial terminal
+    .sp-term {
+        padding: 10px 12px 14px;
+        font: 15px/1.5 $font-mono;
+        color: rgba($shell, 0.55);
+        background: $ink;
+        border-radius: 8px;
+    }
+    .sp-row {
+        margin-top: 6px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        transition: background 0.2s;
+        span { display: inline-block; margin-left: 4px; opacity: 0.25; transition: opacity 0.15s, color 0.15s; }
+        span.sent { opacity: 1; }
+        &.active { background: rgba($shell, 0.08); }
+        // direction, in the colours of the pulses on the wire
+        .sp-tx { color: $neon; }
+        .sp-rx { color: $led; }
+    }
+    .sp-meaning { margin: 0 6px; font-style: italic; opacity: 0; transition: opacity 0.3s; }
+    .sp-meaning b { font-style: normal; font-weight: 700; }
+    // byte roles, shared by the hex dump and the words that explain it
+    .r-g { color: rgba($shell, 0.4); }
+    .r-id { color: #FFC44D; }
+    .r-inst { color: #B79CFF; }
+    .r-pos { color: $neon; }
+    .r-time { color: $led; }
+    .sp-meaning.shown { opacity: 1; }
+}
 
 // ---------------------------------------------------------------- fragment images (fragment-images.js)
 //

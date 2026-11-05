@@ -5,7 +5,9 @@ import M5
 import m5ui
 import lvgl as lv
 
-sys.path.append("/flash/libs")
+sys.path.insert(0, "/flash/libs")      # our port first: UIFlow ships its own stackchan
+for name in [m for m in sys.modules if m.split(".")[0] == "stackchan"]:
+    del sys.modules[name]                # ...and forget it if it was already imported
 from stackchan import get_stackchan
 from stackchan.hal import get_hal
 from stackchan.motion import create_default_motion

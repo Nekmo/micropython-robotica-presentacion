@@ -203,7 +203,7 @@ Bienvenidos a la **robótica**
 
 
 
-Micropython en **microcontroladores**
+**Micropython** en microcontroladores
 =====================================
 
 .. revealjs-section::
@@ -315,29 +315,6 @@ El cerebro: **ESP32-S3**
    tenemos decoradores como viper, o podemos escribir módulos en C para las partes críticas.
 
 
-Nuestras **herramientas**
--------------------------
-
-.. revealjs-section::
-    :data-scene: sheet
-    :data-background-color: #E9EEF2
-    :data-sheet: Micropython
-
-.. revealjs-fragments::
-
-    * 📦 **UIFlow 2**: el **firmware Micropython** de M5Stack, con soporte para el robot.
-    * 🧰 **mpytool**: **subir ficheros** y reiniciar desde la terminal.
-    * 🥽 **esp-emulator**: **simulador** de Stack-chan, también dentro de esta presentación.
-    * 🖥️ **Esta presentación**: **envía código al robot** por Web Serial.
-
-.. revealjs-notes::
-
-   Estas son las herramientas que usaremos. UIFlow 2 es el firmware de Micropython de M5Stack, que trae los módulos
-   para controlar el robot. Mpytool para subir ficheros. Un simulador que he desarrollado para poder probar el
-   código sin el robot. Y la propia presentación, que se comunica con el robot por el puerto serie del navegador.
-
-
-
 Casos de **uso**
 ================
 
@@ -376,33 +353,6 @@ Programar a **Stack-chan**
    servos: uno para girar y otro para inclinar la cabeza. Podéis girar el modelo con el ratón.
 
 
-Hoja de **especificaciones**
-----------------------------
-
-.. revealjs-section::
-    :data-scene: sheet
-    :data-background-color: #E9EEF2
-    :data-sheet: Stack-chan
-
-.. container:: spec
-
-    Servos
-        2 servos de bus serie (UART), con lectura de posición.
-    Sensores
-        Táctil Si12T (3 zonas), IMU BMI270, luz y proximidad LTR-553.
-    Multimedia
-        Pantalla de 320×240, cámara GC0308, micrófono y altavoz I2S.
-    Luces
-        12 LEDs RGB en dos tiras de 6.
-    Energía
-        Batería con monitor INA226.
-
-.. revealjs-notes::
-
-   Esta es la hoja de especificaciones, que iremos recorriendo en cada reto. Fijaos en que los servos son de bus
-   serie: no son los servos baratos de modelismo, sino servos que nos pueden decir dónde están.
-
-
 Primer reto: los **servos**
 ===========================
 
@@ -414,7 +364,7 @@ Primer reto: los **servos**
 
 .. stackchan-face::
     :size: small
-    :emotion: determined
+    :emotion: wink
 
 .. rst-class:: dimension
 
@@ -432,107 +382,26 @@ Reto 1 de 5
     :data-scene: sheet
     :data-background-color: #E9EEF2
     :data-sheet: Reto 1: servos
-    :data-fx: protractor
-
-.. revealjs-fragments::
-
-    * Un **motor**, una **reductora** y un **sensor de posición**.
-    * Le pedimos **un ángulo** y él mismo **corrige hasta llegar**.
-    * Los de modelismo se controlan por **PWM**: solo escuchan.
-    * Los de **bus serie**, como los de Stack-chan, **también responden**.
-
-.. revealjs-notes::
-
-   Un servo es un motor con un sensor de posición. Nosotros le pedimos un ángulo y él se encarga de llegar. Los
-   servos baratos de modelismo se controlan con pulsos PWM y no nos dicen nada. Los de Stack-chan usan un bus
-   serie: podemos preguntarles en qué ángulo están, cuánta corriente consumen, o dejarlos sueltos para moverlos a
-   mano.
-
-
-Servo de **modelismo** (PWM)
-----------------------------
-
-.. revealjs-section::
-    :data-scene: sheet
-    :data-background-color: #E9EEF2
-    :data-sheet: Reto 1: servos
-
-.. container:: wide-cols
-
-    .. revealjs-code-block:: python
-        :data-line-numbers: 1-12|1|3|6-9|12
-
-        from machine import Pin, PWM
-
-        servo = PWM(Pin(5), freq=50)       # one pulse every 20 ms
-
-
-        def angle(degrees):
-            # 0.5 ms = 0°, 2.5 ms = 180°
-            pulse_ns = 500_000 + degrees * 2_000_000 // 180
-            servo.duty_ns(pulse_ns)
-
-
-        angle(90)
-
-    .. widget:: pwm
-
-.. revealjs-notes::
-
-   Para que veáis la diferencia, así se controla un servo de modelismo, como los de muchos robots que se montan a
-   mano (mover el control de la derecha). Enviamos un pulso cada 20 milisegundos, y la duración del pulso indica el ángulo. Sencillo, pero el servo nunca
-   nos dirá si ha llegado o si algo lo bloquea.
-
-
-Servos de **Stack-chan**
-------------------------
-
-.. revealjs-section::
-    :data-scene: sheet
-    :data-background-color: #E9EEF2
-    :data-sheet: Reto 1: servos
-    :data-fx: protractor
-
-.. revealjs-code-block:: python
-    :data-line-numbers: 1-9|1-3|4-5|7|8-9
-
-    from hardware.stackchan import StackChan
-
-    robot = StackChan(i2c=1, uart=1)
-    robot.set_servo_power(True)                 # power rail
-    robot.set_servo_torque(robot.SERVO_ID_X, True)
-
-    robot.set_servo_angle(robot.SERVO_ID_X, 200, 300)   # degrees, ms
-    print(robot.get_servo_angle(robot.SERVO_ID_X))      # where is it?
-    print(robot.get_servo_current(robot.SERVO_ID_X))    # is it working hard?
-
-.. revealjs-notes::
-
-   Con Stack-chan es aún más fácil. Activamos la alimentación y el par, y le pedimos un ángulo y el tiempo para
-   llegar. Y además podemos leer el ángulo actual y la corriente. Si desactivamos el par, podemos mover la cabeza a
-   mano y leer la posición: así se graban movimientos.
-
-
-Pruébalo **tú**
----------------
-
-.. revealjs-section::
-    :data-scene: sheet
-    :data-background-color: #E9EEF2
-    :data-sheet: Reto 1: servos
 
 .. stackchan-3d::
-    :mode: servos
-    :height: 600px
+    :mode: servo
+    :height: 660px
+    :steps: 6
 
 .. revealjs-notes::
 
-   Antes de tocar el robot de verdad, juguemos con el modelo. Al mover los controles, a la derecha vemos el código
-   equivalente. El eje X gira la cabeza, el Y la inclina.
+   Por dentro, un servo es un motor pequeño y rápido, una reductora que lo convierte en lento y con fuerza, un
+   sensor de posición, normalmente un potenciómetro en el eje de salida, y un circuito de control que compara dónde
+   está con dónde le pedimos que esté, y mueve el motor hasta que coinciden. (Siguiente.) Los de modelismo se
+   controlan por PWM: cada 20 milisegundos un pulso, y su anchura es el ángulo: medio milisegundo son 0 grados, dos
+   y medio son 180. En Micropython basta con PWM y duty_ns (mover el control). Pero es de solo ida: nunca nos dice
+   si ha llegado o si algo lo bloquea. (Siguiente.) Los de bus serie, como los Feetech SCS de Stack-chan, comparten un cable con una
+   UART: cada servo tiene un identificador, le mandamos paquetes con órdenes, y si le preguntamos, nos contesta
+   dónde está.
 
 
-Demo: **sí** y **no**
----------------------
+Hablar con un servo de **bus**
+------------------------------
 
 .. revealjs-section::
     :data-scene: blueprint
@@ -540,55 +409,17 @@ Demo: **sí** y **no**
     :data-sheet: Reto 1: servos
 
 .. micropython-demo::
-    :file: demos/demo1_servos/demo.py
-    :steps: 5-9|11-13|16-19|22-25|26-29
+    :file: demos/demo1a_bus/demo.py
+    :steps: 3,7|10-16|11-12|14|19-22|25-27|28-30
 
 .. revealjs-notes::
 
-   Ahora sí, en el robot. Guardamos la posición inicial como "mirar al frente", y definimos una función look que
-   mueve la cabeza relativa a esa posición. Con eso, decir que no es girar a un lado y a otro, y decir que sí es
-   inclinar. (Ejecutar.) Fijaos en la cámara.
-
-
-Demo: movimiento **natural**
-----------------------------
-
-.. revealjs-section::
-    :data-scene: blueprint
-    :data-background-color: #1F2A44
-    :data-sheet: Reto 1: servos
-
-.. micropython-demo::
-    :file: demos/demo2_mirada/demo.py
-    :steps: 13-14|17-22|25-27
-
-.. revealjs-notes::
-
-   El movimiento anterior es muy robótico: arranca y frena de golpe. Para que parezca vivo, interpolamos con una
-   curva de aceleración, ease in out: empieza despacio, acelera y frena suavemente. Es lo que hacen los
-   animadores. El firmware completo va más allá y usa un sistema de muelles amortiguados.
-
-
-El mismo código, en el **simulador**
-------------------------------------
-
-.. revealjs-section::
-    :data-scene: blueprint
-    :data-background-color: #1F2A44
-    :data-sheet: Reto 1: servos
-
-.. stackchan-3d::
-    :mode: mirror
-    :height: 620px
-    :file: demos/demo2_mirada/demo.py
-
-.. revealjs-notes::
-
-   Y si no tenéis un Stack-chan, el mismo código funciona en el simulador, que corre dentro de esta misma
-   presentación: es Micropython compilado a WebAssembly, con los módulos del robot simulados. Este modelo 3D sigue
-   al simulador en tiempo real: los servos, los LEDs y su pantalla. (Pulsar en ejecutar.) En cualquier demo podéis
-   elegir "Simulador" en lugar de "Robot (USB)".
-
+   Sin librerías del robot: solo una UART de Micropython. Cada servo del bus tiene un identificador y le hablamos con
+   paquetes: cabecera, identificador, longitud, instrucción, parámetros y una suma de comprobación. Para moverlo,
+   escribimos en su registro 42 la posición y el tiempo. Y como el bus es bidireccional, si le pedimos que lea su
+   registro 56, nos contesta dónde está. Esto sirve para cualquier servo Feetech SCS, no solo para Stack-chan: lo
+   único propio del robot es encender la alimentación de los servos. (Ejecutar.) La cabeza gira a un lado, al otro y
+   vuelve, y en el terminal vemos cada respuesta del servo en hexadecimal, con la posición que nos dice.
 
 
 Segundo reto: los **sensores**
@@ -602,7 +433,7 @@ Segundo reto: los **sensores**
 
 .. stackchan-face::
     :size: small
-    :emotion: determined
+    :emotion: ticklish
 
 .. rst-class:: dimension
 
@@ -647,17 +478,20 @@ Demo: **acaríciame**
 
 .. micropython-demo::
     :file: demos/demo3_cabeza/demo.py
-    :steps: 6-7|10|12-15|16-17
+    :steps: 6-8|11-15|23-24|25-28|29-32
 
 .. revealjs-notes::
 
-   get_touch nos devuelve una lista con las tres zonas. Asignamos un color a cada zona y pitamos con un tono
-   distinto. (Ejecutar y acariciar la cabeza de delante a atrás.) Con las tres zonas podemos detectar incluso la
-   dirección de la caricia, que es lo que hace el firmware completo.
+   Otra vez sin librerías del robot: el sensor táctil es un chip Si12T en el bus I2C, que el robot ya deja
+   configurado al arrancar. Leemos un solo registro, el 0x10, que trae dos bits por zona: delante, centro y
+   detrás, y cuánta presión. Cada cambio sale por la consola, para que se vea aunque no se oiga el pitido. Los
+   LEDs también van por I2C: los manda un expansor, al que escribimos los colores y le decimos que los muestre.
+   (Ejecutar y acariciar la cabeza de delante a atrás.) Con las tres zonas podemos detectar incluso la dirección
+   de la caricia, que es lo que hace el firmware completo.
 
 
-Demo: **nivel** de burbuja
---------------------------
+Demo: ¿**cómo** me has dejado?
+------------------------------
 
 .. revealjs-section::
     :data-scene: blueprint
@@ -666,13 +500,15 @@ Demo: **nivel** de burbuja
 
 .. micropython-demo::
     :file: demos/demo4_imu/demo.py
-    :steps: 11|13|14-16|17-19
+    :steps: 18-20|23|26-28|29-32|33-40|41-44
 
 .. revealjs-notes::
 
-   Con la IMU leemos la aceleración en cada eje, en g. Si el robot está quieto, solo mide la gravedad, así que la
-   inclinación nos dice hacia dónde está ladeado. Convertimos esa inclinación en la posición de un LED, como un
-   nivel de burbuja. Y si lo agitamos, se enfada.
+   Con la IMU leemos la aceleración en cada eje, en g. Si el robot está quieto, solo mide la gravedad: una flecha
+   que apunta al suelo. Guardamos esa flecha al arrancar, como "de pie", y cada vez calculamos el ángulo entre la
+   flecha de ahora y la de entonces. Con ese ángulo sabemos si está de pie, inclinado, tumbado o boca abajo. Y si
+   la aceleración supera mucho 1 g, es que lo están agitando. Cada cambio sale por la consola y cambia el color de
+   los LEDs. (Ejecutar, inclinarlo, tumbarlo, ponerlo boca abajo y agitarlo.)
 
 
 Demo: Stack-chan **tímido**
@@ -685,13 +521,15 @@ Demo: Stack-chan **tímido**
 
 .. micropython-demo::
     :file: demos/demo5_proximidad/demo.py
-    :steps: 15-16|17-20|21-24
+    :steps: 12-14|29-35|39|40-43|44-48|49-53
 
 .. revealjs-notes::
 
-   El sensor de proximidad emite luz infrarroja y mide cuánta rebota. Cuando acercamos la mano, Stack-chan se pone
-   colorado y aparta la mirada. Cuando la retiramos, vuelve a mirarnos. Aquí ya combinamos un sensor con los
-   servos: es el ciclo básico de cualquier robot. Percibir, decidir, actuar.
+   El sensor de proximidad emite luz infrarroja y mide cuánta rebota: es otro chip I2C, el LTR-553, y basta con
+   leer dos bytes. Pero el propio cristal del robot ya refleja algo de luz, así que nunca da cero: al arrancar
+   medimos ese reposo, y luego miramos cuánto sube por encima, suavizando las lecturas para que no tiemble. Cuando
+   acercamos la mano, Stack-chan se pone colorado y aparta la mirada; cuando la retiramos, vuelve a mirarnos.
+   Percibir, decidir, actuar: el ciclo básico de cualquier robot.
 
 
 
@@ -706,7 +544,7 @@ Tercer reto: **micrófono** y **cámara**
 
 .. stackchan-face::
     :size: small
-    :emotion: determined
+    :emotion: curious
 
 .. rst-class:: dimension
 
@@ -750,11 +588,13 @@ Demo: **vúmetro**
 
 .. micropython-demo::
     :file: demos/demo6_microfono/demo.py
-    :steps: 9-11|14-16|20-22|23-26
+    :steps: 22-24|27-30|33|37-38|39-42
 
 .. revealjs-notes::
 
-   Grabamos bloques de 50 milisegundos, calculamos el pico y encendemos tantos LEDs como fuerte sea el sonido.
+   El micrófono comparte el bus de audio con el altavoz, así que primero apagamos el altavoz. Grabamos bloques de
+   50 milisegundos, calculamos el pico y encendemos tantos LEDs como fuerte sea el sonido; la consola dibuja el
+   mismo nivel. La primera grabación la tiramos: empieza con un chasquido.
    (Ejecutar.) ¿Me ayudáis con un aplauso? ... ¡Gracias! Era para la demo, pero me lo quedo.
 
 
@@ -789,29 +629,14 @@ Demo: lo que **ve** Stack-chan
 
 .. micropython-demo::
     :file: demos/demo7_camara/demo.py
-    :steps: 6|10|11
+    :steps: 6|11-12|13-19
 
 .. revealjs-notes::
 
-   Capturamos y pintamos en un bucle. (Ejecutar.) Ahora tenemos una cámara grabando a un robot que muestra lo que
+   Capturamos y pintamos en un bucle. Y como la pantalla es táctil, al tocarla hacemos una foto: congelamos la
+   imagen dos segundos. Fijaos en que comparamos con la vuelta anterior, para hacer una sola foto por toque y no
+   una por cada imagen mientras el dedo sigue encima. (Ejecutar y tocar la pantalla.) Ahora tenemos una cámara grabando a un robot que muestra lo que
    graba su cámara. Si apunto mi cámara a su pantalla... recursividad en hardware.
-
-
-La vista desde **aquí**
------------------------
-
-.. revealjs-section::
-    :data-scene: blueprint
-    :data-background-color: #1F2A44
-    :data-sheet: Reto 3: cámara
-
-.. camera-view::
-    :mode: full
-
-.. revealjs-notes::
-
-   Veámoslo en grande. (Acercar a Stack-chan al público para que se vea en su pantalla.)
-
 
 
 Cuarto reto: la **pantalla**
@@ -825,7 +650,7 @@ Cuarto reto: la **pantalla**
 
 .. stackchan-face::
     :size: small
-    :emotion: determined
+    :emotion: love
 
 .. rst-class:: dimension
 
@@ -856,6 +681,9 @@ Dos formas de **dibujar**
         * **Pintas y te olvidas**.
         * Ideal para **empezar**.
 
+        .. screen-robot::
+            :mode: gfx
+
     .. container::
 
         **LVGL**
@@ -863,6 +691,9 @@ Dos formas de **dibujar**
         * **Objetos** con estilos y animaciones.
         * Solo **repinta lo que cambia**.
         * Lo que usa el **firmware real**.
+
+        .. screen-robot::
+            :mode: lvgl
 
 .. revealjs-notes::
 
@@ -890,26 +721,6 @@ Demo: dibujar una **cara**
    una persona.
 
 
-Demo: **emociones**
--------------------
-
-.. revealjs-section::
-    :data-scene: blueprint
-    :data-background-color: #1F2A44
-    :data-sheet: Reto 4: pantalla
-
-.. micropython-demo::
-    :file: demos/demo9_avatar/demo.py
-    :steps: 8-12|20-25|28-30|32-35
-
-.. revealjs-notes::
-
-   Y esta es la cara real de Stack-chan, del port del firmware a Micropython, hecha con LVGL. Le añadimos
-   modificadores de parpadeo y respiración, y recorremos sus emociones: contento, enfadado, triste, dudoso y con
-   sueño. Cada emoción es solo un conjunto de pesos y rotaciones para los ojos y la boca.
-
-
-
 Quinto reto: **inteligencia artificial**
 ========================================
 
@@ -921,7 +732,7 @@ Quinto reto: **inteligencia artificial**
 
 .. stackchan-face::
     :size: small
-    :emotion: determined
+    :emotion: thinking
 
 .. rst-class:: dimension
 
@@ -950,6 +761,9 @@ Dos **caminos**
         * **Modelos pequeños**: TFLite Micro, emlearn.
         * **Sin red**, sin latencia, **sin enviar datos**.
 
+        .. path-anim::
+            :mode: chip
+
     .. container::
 
         **En la nube**
@@ -957,6 +771,9 @@ Dos **caminos**
         * **Modelos de lenguaje** por HTTPS.
         * **Agentes de voz** para ESP32.
         * **Toda la potencia**, a cambio de red.
+
+        .. path-anim::
+            :mode: cloud
 
 .. revealjs-notes::
 
@@ -975,13 +792,14 @@ Demo: **sígueme**
 
 .. micropython-demo::
     :file: demos/demo10_caras/demo.py
-    :steps: 9|17-18|20-22|23-26|27-29
+    :steps: 10-11|22-23|25-26|27-30|31|32-34
 
 .. revealjs-notes::
 
    Primero, en local. El detector de caras corre en el ESP32-S3 usando sus instrucciones vectoriales. Calculamos
-   lo lejos que está la cara del centro de la imagen, y movemos los servos proporcionalmente a ese error. Esto se
-   llama control proporcional, y es la base del control en robótica. (Ejecutar y moverse delante del robot.)
+   lo lejos que está la cara del centro de la imagen, y giramos la cabeza proporcionalmente a ese error, unos
+   pocos pasos por imagen para que el movimiento sea suave. Esto se llama control proporcional, y es la base del
+   control en robótica. (Ejecutar y moverse delante del robot.)
 
 
 Control **proporcional**
@@ -1005,25 +823,6 @@ Control **proporcional**
    Dos líneas. Movamos la ganancia: si es muy pequeña, el robot llega tarde; si es muy grande, se pasa de largo
    y oscila, porque la cámara siempre ve la cara con un fotograma de retraso. Encontrar el valor es cuestión de
    probar, y probar en vivo es justo lo que Micropython nos permite.
-
-
-Demo: pregúntale a **Claude**
------------------------------
-
-.. revealjs-section::
-    :data-scene: blueprint
-    :data-background-color: #1F2A44
-    :data-sheet: Reto 5: IA
-
-.. micropython-demo::
-    :file: demos/demo11_claude/demo.py
-    :steps: 14-18|22-29|30-38|40-44|47-52
-
-.. revealjs-notes::
-
-   Y ahora, en la nube. Conectamos a la WiFi y hacemos una petición HTTPS a la API de Claude, de Anthropic, desde
-   el propio ESP32. Le damos una personalidad con el mensaje de sistema: eres Stack-chan, un pequeño robot. La
-   clave de la API está en un fichero secrets.py en el robot, nunca en la presentación. (Ejecutar.)
 
 
 Los **límites**
@@ -1083,25 +882,6 @@ Demo: ¡a **bailar**!
 
    Esta demo usa el port completo del firmware: el avatar con su cara, los servos con física de muelles, los LEDs,
    y los modificadores. Mientras baila, podéis acariciarle la cabeza o agitarlo, y reaccionará. (Ejecutar.)
-
-
-Stack-chan, **en vivo**
------------------------
-
-.. revealjs-section::
-    :data-scene: blueprint
-    :data-background-color: #1F2A44
-    :data-sheet: Demo final
-
-.. camera-view::
-    :mode: full
-
-.. revealjs-notes::
-
-   Y ahora, el firmware completo en Micropython, como viene de fábrica: el lanzador de aplicaciones, el avatar con
-   sus emociones, los bailes y el control remoto. ¿Alguien quiere subir a acariciarlo? (Reiniciar el robot para
-   que arranque main.py, y dejar que el público interactúe con él.)
-
 
 
 ¡Muchas **gracias**!
@@ -1171,6 +951,9 @@ Python **Málaga**
     :data-background-color: #FF4F9A
     :data-transition: fade
 
+.. stackchan-3d::
+    :mode: peek
+
 * 🌐 **Sitio web:** `python-malaga.es <https://www.python-malaga.es/>`_.
 * 🤝 **Meetup:** `meetup.com/Python-Malaga <https://www.meetup.com/Python-Malaga/>`_.
 * 🐦 **Twitter:** `@python_malaga <https://twitter.com/python_malaga>`_.
@@ -1193,11 +976,18 @@ Python **Málaga**
     :data-sheet: Contacto
     :data-transition: fade
 
-* 🌐 **Sitio web:** `nekmo.com <https://nekmo.com>`_
-* 📫 **Email:** `contacto@nekmo.com <mailto:contacto@nekmo.com>`_
-* 🐦 **Twitter:** `@nekmocom <https://twitter.com/nekmocom>`_
-* 📱 **Telegram:** `@nekmo <https://t.me/nekmo>`_
-* 💡 **Jabber:** `nekmo@nekmo.org <xmpp://nekmo@nekmo.org>`_
+.. container:: contact-cols
+
+    .. container::
+
+        * 🌐 **Sitio web:** `nekmo.com <https://nekmo.com>`_
+        * 📫 **Email:** `contacto@nekmo.com <mailto:contacto@nekmo.com>`_
+        * 🐦 **Twitter:** `@nekmocom <https://twitter.com/nekmocom>`_
+        * 📱 **Telegram:** `@nekmo <https://t.me/nekmo>`_
+        * 💡 **Jabber:** `nekmo@nekmo.org <xmpp://nekmo@nekmo.org>`_
+
+    .. screen-robot::
+        :mode: mail
 
 .. revealjs-notes::
 

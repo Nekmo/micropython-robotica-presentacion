@@ -86,32 +86,24 @@ class MicroPythonDemo(Directive):
 
 
 class StackChan3D(Directive):
-    """three.js Stack-chan. Modes: ``anatomy`` (labelled parts), ``servos``
-    (yaw/pitch sliders), ``mirror`` (follows the emulator state), ``board``
-    (ESP32-S3 board) and ``peek`` (jumps into a section slide)."""
+    """three.js Stack-chan. Modes: ``anatomy`` (labelled parts), ``mirror``
+    (follows the emulator state), ``board`` (ESP32-S3 board), ``peek`` (jumps
+    into a section slide) and ``servo`` (how a servo works: PWM and UART)."""
     option_spec = {
-        'mode': lambda arg: directives.choice(arg, ('anatomy', 'servos', 'mirror', 'board', 'peek')),
+        'mode': lambda arg: directives.choice(arg, ('anatomy', 'mirror', 'board', 'peek', 'servo')),
         'height': directives.unchanged,
-        'file': directives.unchanged,
         'steps': directives.nonnegative_int,
     }
 
     def run(self):
         mode = self.options.get('mode', 'anatomy')
         height = html.escape(self.options.get('height', '560px'))
-        source = ''
-        if 'file' in self.options:   # program the mirror mode can run
-            env = self.state.document.settings.env
-            rel, path = env.relfn2path(self.options['file'])
-            env.note_dependency(rel)
-            with open(path, encoding='utf-8') as fh:
-                source = f'<pre class="sc3d-source" style="display: none">{html.escape(fh.read())}</pre>'
         # labels revealed one by one with the presentation's arrows
         steps = ''.join('<span class="fragment sc3d-step"></span>'
                         for _ in range(self.options.get('steps', 0)))
         markup = (
             f'<div class="stackchan-3d" data-mode="{mode}" style="height: {height}">'
-            f'{source}{steps}<canvas></canvas><div class="sc3d-labels"></div>'
+            f'{steps}<canvas></canvas><div class="sc3d-labels"></div>'
             '<div class="sc3d-controls"></div></div>'
         )
         return [nodes.raw('', markup, format='html')]
@@ -128,7 +120,7 @@ FACE_HTML = '''
 <div class="sc-face {size}" data-emotion="{emotion}" aria-hidden="true">''' + FACE_PARTS + '''</div>
 '''
 
-EMOTIONS = ('neutral', 'happy', 'doubt', 'surprised', 'determined')
+EMOTIONS = ('neutral', 'happy', 'doubt', 'surprised', 'wink', 'ticklish', 'curious', 'love', 'thinking')
 
 
 class StackChanFace(Directive):
@@ -176,12 +168,39 @@ class StackChanIntro(Directive):
         return [nodes.raw('', INTRO_HTML, format='html')]
 
 
+class ScreenRobot(Directive):
+    """A small Stack-chan whose screen is drawn by screens.js: ``gfx`` (M5GFX
+    primitives), ``lvgl`` (LVGL objects) or ``mail`` (the author's face,
+    with letters flying in)."""
+    option_spec = {'mode': lambda arg: directives.choice(arg, ('gfx', 'lvgl', 'mail'))}
+
+    def run(self):
+        mode = self.options.get('mode', 'gfx')
+        markup = (
+            f'<div class="screen-robot" data-mode="{mode}" aria-hidden="true">'
+            '<div class="intro-head"><div class="intro-screen"><canvas width="320" height="240"></canvas></div>'
+            '<div class="intro-camera"></div></div><div class="intro-base"></div></div>'
+        )
+        return [nodes.raw('', markup, format='html')]
+
+
+class PathAnimation(Directive):
+    """Animation of an AI path (screens.js): ``chip`` (on device) or
+    ``cloud`` (a large model over the network)."""
+    option_spec = {'mode': lambda arg: directives.choice(arg, ('chip', 'cloud'))}
+
+    def run(self):
+        mode = self.options.get('mode', 'chip')
+        return [nodes.raw('', f'<canvas class="path-anim" data-mode="{mode}" width="480" height="240" '
+                              'aria-hidden="true"></canvas>', format='html')]
+
+
 class Widget(Directive):
-    """Interactive explainer built by widgets.js (``pwm``, ``pcontrol``)."""
+    """Interactive explainer built by widgets.js (``pcontrol``)."""
     required_arguments = 1
 
     def run(self):
-        name = directives.choice(self.arguments[0], ('pwm', 'pcontrol'))
+        name = directives.choice(self.arguments[0], ('pcontrol',))
         return [nodes.raw('', f'<div class="widget widget-{name}" data-widget="{name}"></div>',
                           format='html')]
 
@@ -224,13 +243,21 @@ def build_simulator_bundle(app):
 
 
 def write_model_version(app):
-    """Expose a hash of the 3D model so browsers never reuse a stale export."""
+    """Expose hashes of the 3D model and the simulator modules so browsers
+    never reuse a stale export (ES modules and workers skip Sphinx's ?v=)."""
     import hashlib
     src = app.srcdir
     with open(os.path.join(src, '_static', 'models', 'stackchan.glb'), 'rb') as fh:
         digest = hashlib.md5(fh.read()).hexdigest()[:10]
+    sim = hashlib.md5()
+    sim_dir = os.path.join(src, '_static', 'sim')
+    for name in sorted(os.listdir(sim_dir)):
+        if name.endswith(('.mjs', '.js', '.json')):   # bundle.json: simulator + robot Python
+            with open(os.path.join(sim_dir, name), 'rb') as fh:
+                sim.update(fh.read())
     with open(os.path.join(src, '_static', 'js', 'model-version.js'), 'w', encoding='utf-8') as fh:
         fh.write('window.STACKCHAN_MODEL_VERSION = "%s";\n' % digest)
+        fh.write('window.STACKCHAN_SIM_VERSION = "%s";\n' % sim.hexdigest()[:10])
 
 
 def setup(app):
@@ -242,6 +269,8 @@ def setup(app):
     app.add_directive('stackchan-intro', StackChanIntro)
     app.add_directive('camera-view', CameraView)
     app.add_directive('widget', Widget)
+    app.add_directive('screen-robot', ScreenRobot)
+    app.add_directive('path-anim', PathAnimation)
     return {
         'version': '2.0',
         'parallel_read_safe': True,
