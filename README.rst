@@ -1,3 +1,13 @@
+.. image:: https://raw.githubusercontent.com/Nekmo/micropython-robotica-presentacion/master/logo.png
+    :width: 100%
+
+|
+
+.. image:: https://img.shields.io/github/actions/workflow/status/Nekmo/micropython-robotica-presentacion/build.yml?style=flat-square&branch=master
+  :target: https://github.com/Nekmo/micropython-robotica-presentacion/actions?query=workflow%3ABuild
+  :alt: Latest CI build status
+
+
 =======================================================
 Usando Micropython de verdad: bienvenidos a la robótica
 =======================================================
